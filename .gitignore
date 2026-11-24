@@ -1,0 +1,34 @@
+# Node & Nuxt
+node_modules/
+.nuxt/
+.output/
+dist/
+.nitro/
+.cache/
+
+# Strapi
+backend/.tmp/
+backend/build/
+backend/.cache/
+backend/dist/
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS & Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Docker volumes
+pgdata/

@@ -1,0 +1,102 @@
+# ==============================================================================
+# IGENCO AI — Multi-Container Docker Architecture
+# Headless Stack: Nuxt 3 (Frontend) + Strapi v5 (Backend CMS) + PostgreSQL (Database)
+# ==============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # 1. Frontend: Nuxt 3 (Vue 3 + TypeScript + Tailwind CSS)
+  # ---------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: ${NODE_ENV:-development}
+    container_name: igenco_frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - NUXT_PUBLIC_SITE_URL=${FRONTEND_URL:-http://localhost:3000}
+      - NUXT_PUBLIC_STRAPI_URL=${STRAPI_URL:-http://localhost:1337}
+      - NUXT_PUBLIC_USE_MOCK=${FRONTEND_USE_MOCK:-true}
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.nuxt
+    networks:
+      - igenco_network
+    depends_on:
+      - backend
+
+  # ---------------------------------------------------------------------------
+  # 2. Backend: Strapi CMS (TypeScript Headless CMS & API)
+  # ---------------------------------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: ${NODE_ENV:-development}
+    container_name: igenco_backend
+    restart: unless-stopped
+    ports:
+      - "${STRAPI_PORT:-1337}:1337"
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - HOST=0.0.0.0
+      - PORT=1337
+      - APP_KEYS=${STRAPI_APP_KEYS:-tobemodified1,tobemodified2}
+      - API_TOKEN_SALT=${STRAPI_API_TOKEN_SALT:-tobemodifiedsalt}
+      - ADMIN_JWT_SECRET=${STRAPI_ADMIN_JWT_SECRET:-tobemodifiedjwt}
+      - TRANSFER_TOKEN_SALT=${STRAPI_TRANSFER_TOKEN_SALT:-tobemodifiedtransfersalt}
+      - JWT_SECRET=${STRAPI_JWT_SECRET:-tobemodifiedjwtsecret}
+      # Database connection
+      - DATABASE_CLIENT=postgres
+      - DATABASE_HOST=${DB_HOST:-postgres}
+      - DATABASE_PORT=${DB_PORT:-5432}
+      - DATABASE_NAME=${DB_NAME:-igenco_db}
+      - DATABASE_USERNAME=${DB_USER:-postgres}
+      - DATABASE_PASSWORD=${DB_PASSWORD:-postgres_secure_pass}
+      - DATABASE_SSL=${DB_SSL:-false}
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    networks:
+      - igenco_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # ---------------------------------------------------------------------------
+  # 3. Database: PostgreSQL 16
+  # หมายเหตุ: หากเครื่องของคุณมี PostgreSQL บน Docker อยู่แล้ว
+  # สามารถเปลี่ยน DB_HOST ใน .env ให้ชี้ไปยังฐานข้อมูลเดิมได้
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: igenco_postgres
+    restart: unless-stopped
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    environment:
+      POSTGRES_DB: ${DB_NAME:-igenco_db}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres_secure_pass}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - igenco_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-igenco_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+networks:
+  igenco_network:
+    driver: bridge
+
+volumes:
+  pgdata:
+    driver: local

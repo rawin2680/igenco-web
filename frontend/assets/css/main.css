@@ -1,0 +1,287 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-canvas: #F7F9F8;
+  --ink-primary: #09140E;
+  --ink-secondary: #526058;
+  --glass-light: rgba(255, 255, 255, 0.82);
+  --glass-border-light: rgba(9, 20, 14, 0.08);
+  --glass-highlight-emerald: rgba(16, 185, 129, 0.35);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--bg-canvas);
+  color: var(--ink-primary);
+  font-family: 'Plus Jakarta Sans', 'Inter', 'IBM Plex Sans Thai', sans-serif;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Subtle Ambient Emerald Orbs on Crisp Off-White */
+.ambient-glow {
+  position: fixed;
+  width: 55vw;
+  height: 55vw;
+  border-radius: 50%;
+  filter: blur(130px);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.22;
+}
+
+/* Architectural Tech Dot Grid (Matches Screenshot) */
+.bg-grid-dots {
+  background-image: radial-gradient(rgba(9, 20, 14, 0.14) 1.25px, transparent 1.25px);
+  background-size: 28px 28px;
+}
+
+.dark .bg-grid-dots {
+  background-image: radial-gradient(rgba(52, 211, 153, 0.18) 1.25px, transparent 1.25px);
+}
+
+/* Frosted White Glass Surface */
+.glass-panel {
+  background: var(--glass-light);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--glass-border-light);
+  box-shadow: 0 12px 36px -10px rgba(9, 20, 14, 0.05);
+  transition: border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
+}
+
+.glass-panel:hover {
+  border-color: rgba(16, 185, 129, 0.32);
+  box-shadow: 0 20px 44px -12px rgba(5, 150, 105, 0.09);
+}
+
+/* Dark Obsidian Contrast Surface */
+.glass-dark {
+  background: linear-gradient(145deg, #09140E 0%, #111815 100%);
+  border: 1px solid rgba(52, 211, 153, 0.16);
+  box-shadow: 0 25px 60px -15px rgba(9, 20, 14, 0.35);
+}
+
+/* Interactive Mouse-Tracking Emerald Bento Spotlight */
+.bento-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.bento-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: radial-gradient(
+    520px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(16, 185, 129, 0.65),
+    rgba(5, 150, 105, 0.2) 45%,
+    transparent 75%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+.bento-card:hover::before {
+  opacity: 1;
+}
+
+.bento-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    420px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(16, 185, 129, 0.07),
+    transparent 65%
+  );
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+.bento-card:hover::after {
+  opacity: 1;
+}
+
+/* Hero Typography Gradients */
+.text-gradient-hero {
+  background: linear-gradient(135deg, #09140E 0%, #111815 42%, #059669 78%, #10B981 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-emerald {
+  background: linear-gradient(90deg, #059669 0%, #10B981 50%, #34D399 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Animated SVG Path for Data Line */
+.sparkline-path {
+  stroke-dasharray: 400;
+  stroke-dashoffset: 400;
+  animation: drawLine 2.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes drawLine {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Node Pulse Flow */
+@keyframes flowDot {
+  0% { left: 0%; opacity: 0; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { left: 100%; opacity: 0; }
+}
+
+.flow-particle {
+  animation: flowDot 2.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F7F9F8;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(9, 20, 14, 0.18);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #059669;
+}
+
+/* ==============================================================================
+   DARK THEME STYLING
+   ============================================================================== */
+.dark {
+  --bg-canvas: #070E0A;
+  --ink-primary: #F1F7F4;
+  --ink-secondary: #8BA194;
+  --glass-light: rgba(11, 23, 17, 0.94);
+  --glass-border-light: rgba(0, 201, 120, 0.25);
+  --glass-highlight-emerald: rgba(0, 201, 120, 0.5);
+  color-scheme: dark;
+}
+
+.dark body {
+  background-color: #070E0A;
+  color: #F1F7F4;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #070E0A;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(0, 201, 120, 0.3);
+}
+
+.dark .glass-panel {
+  background: rgba(11, 23, 17, 0.94) !important;
+  border-color: rgba(0, 201, 120, 0.25) !important;
+  box-shadow: 0 12px 36px -10px rgba(0, 0, 0, 0.6) !important;
+}
+
+.dark .text-forestBlack {
+  color: #F1F7F4 !important;
+}
+
+.dark .text-forestBlack\/85,
+.dark .text-forestBlack\/90,
+.dark .text-forestBlack\/80,
+.dark .text-forestBlack\/70 {
+  color: #F1F7F4 !important;
+}
+
+.dark .text-mutedSlate {
+  color: #8BA194 !important;
+}
+
+/* Hero Section in Dark Mode */
+.dark #hero {
+  background: linear-gradient(180deg, #070E0A 0%, #0A1610 50%, #0D2016 100%) !important;
+}
+
+.dark #hero .bg-white {
+  background-color: #0E2017 !important;
+  border-color: rgba(0, 201, 120, 0.25) !important;
+  color: #F1F7F4 !important;
+}
+
+/* News Section in Dark Mode */
+.dark #news {
+  background-color: #070E0A !important;
+  border-color: rgba(0, 201, 120, 0.15) !important;
+}
+
+.dark #news article,
+.dark #news aside > div {
+  background-color: #0E2017 !important;
+  border-color: rgba(0, 201, 120, 0.18) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+}
+
+.dark #news input {
+  background-color: #070E0A !important;
+  border-color: rgba(0, 201, 120, 0.2) !important;
+  color: #F1F7F4 !important;
+}
+
+/* Products Section in Dark Mode */
+.dark #products {
+  background-color: #0A1610 !important;
+  border-color: rgba(0, 201, 120, 0.15) !important;
+}
+
+.dark #products article {
+  background-color: #0E2017 !important;
+  border-color: rgba(0, 201, 120, 0.18) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Contact Section in Dark Mode */
+.dark #contact {
+  background-color: #070E0A !important;
+  border-color: rgba(0, 201, 120, 0.15) !important;
+}
+
+.dark #contact > div > div:first-child {
+  background-color: #0E2017 !important;
+  border-color: rgba(0, 201, 120, 0.25) !important;
+}
+
+.dark #contact .bg-white {
+  background-color: #0E2017 !important;
+  border-color: rgba(0, 201, 120, 0.18) !important;
+}
+
+.dark #contact input,
+.dark #contact textarea,
+.dark #contact select {
+  background-color: #070E0A !important;
+  border-color: rgba(0, 201, 120, 0.25) !important;
+  color: #F1F7F4 !important;
+}
+
+.dark #contact .bg-\[\#F8FAF9\] {
+  background-color: #070E0A !important;
+}

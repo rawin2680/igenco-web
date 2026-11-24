@@ -1,0 +1,139 @@
+<script setup lang="ts">
+import { useAppModal } from '~/composables/useModal'
+import { useAppI18n } from '~/composables/useI18n'
+
+const { isUserGroupsModalOpen, closeUserGroups, openDemo } = useAppModal()
+const { locale } = useAppI18n()
+
+const userGroups = [
+  {
+    id: 'oic',
+    category: 'หน่วยงานกำกับดูแลภาครัฐ & สถาบันการเงิน',
+    badge: 'RegTech & Compliance',
+    title: 'สำนักงาน คปภ. และธุรกิจประกันภัย',
+    description: 'ระบบยื่นขอรับความเห็นชอบแบบและข้อความกรมธรรม์ประกันภัยทางอิเล็กทรอนิกส์ (I-SERFF Enterprise) รองรับบริษัทประกันวินาศภัยและประกันชีวิตทั่วประเทศ',
+    product: 'I-SERFF Enterprise',
+    stats: '100% สอดคล้องเกณฑ์ คปภ.'
+  },
+  {
+    id: 'gov',
+    category: 'กระทรวงและหน่วยงานภาครัฐ',
+    badge: 'e-Government Standard',
+    title: 'ระบบงานสารบรรณอิเล็กทรอนิกส์ภาครัฐ',
+    description: 'หน่วยงานราชการและรัฐวิสาหกิจใช้งาน iSmartFlow ในการบริหารจัดการงานสารบรรณ หนังสือเวียน การเกษียณหนังสือ และระบบลงนามอิเล็กทรอนิกส์มาตรฐาน พ.ร.บ. ธุรกรรมทางอิเล็กทรอนิกส์',
+    product: 'iSmartFlow (e-Saraban)',
+    stats: 'ลดเวลาประมวลผลเอกสาร 75%'
+  },
+  {
+    id: 'enterprise',
+    category: 'องค์กรธุรกิจและกลุ่มอุตสาหกรรม',
+    badge: 'Enterprise HR Tech',
+    title: 'ฝ่ายบริหารทรัพยากรบุคคลและองค์กรขนาดใหญ่',
+    description: 'ระบบ HR.ai Platform 2026 รองรับการลงเวลาทำงาน คำนวณเงินเดือน ภาษี กองทุน สวัสดิการ และการประเมินผล KPI พร้อมระบบ Self-Service สำหรับพนักงาน (ESS/MSS)',
+    product: 'HR.ai Platform 2026',
+    stats: 'รองรับพนักงาน 10,000+ คน'
+  },
+  {
+    id: 'service',
+    category: 'สถานพยาบาล & ศูนย์บริการประชาชน',
+    badge: 'Smart Queuing & Service',
+    title: 'ศูนย์บริการลูกค้าและโรงพยาบาล',
+    description: 'ระบบจัดการคิวอัจฉริยะ iGenQ ช่วยจัดระเบียบการให้บริการ ประเมินระยะเวลารอคอยแบบ Real-time และเชื่อมต่อระบบนัดหมายออนไลน์',
+    product: 'iGenQ (Smart Queuing)',
+    stats: 'ลดเวลารอคอยเฉลี่ย 40%'
+  }
+]
+
+const handleConsultClick = () => {
+  closeUserGroups()
+  openDemo()
+}
+</script>
+
+<template>
+  <div
+    v-if="isUserGroupsModalOpen"
+    class="fixed inset-0 z-50 bg-forestBlack/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
+    @click.self="closeUserGroups"
+  >
+    <div class="w-full max-w-3xl bg-white dark:bg-[#0D1D16] rounded-3xl p-6 sm:p-8 border border-forestBlack/10 dark:border-[#00C978]/30 shadow-2xl relative my-8 animate-in fade-in zoom-in-95 duration-200">
+      
+      <!-- Close button -->
+      <button
+        @click="closeUserGroups"
+        class="absolute top-6 right-6 w-9 h-9 rounded-full bg-forestBlack/5 dark:bg-white/10 hover:bg-forestBlack/10 dark:hover:bg-white/20 text-mutedSlate dark:text-neutral-300 hover:text-forestBlack dark:hover:text-white flex items-center justify-center cursor-pointer transition-colors"
+        aria-label="Close"
+      >
+        ✕
+      </button>
+
+      <!-- Badge & Title -->
+      <div class="flex items-center gap-2 mb-3">
+        <span class="w-2.5 h-2.5 rounded-full bg-[#00C978] animate-ping"></span>
+        <span class="text-xs font-mono font-semibold text-[#00875A] dark:text-[#00E588] uppercase tracking-wider">
+          {{ locale === 'th' ? 'กลุ่มผู้ใช้ผลิตภัณฑ์ & ลูกค้าองค์กร' : 'PRODUCT USER GROUPS & CLIENTS' }}
+        </span>
+      </div>
+
+      <h2 class="text-2xl sm:text-3xl font-bold text-forestBlack dark:text-white mb-2">
+        {{ locale === 'th' ? 'กลุ่มผู้ใช้งานระบบซอฟต์แวร์ IGENCO' : 'Enterprise User Groups & Client Portfolio' }}
+      </h2>
+      <p class="text-sm font-medium text-mutedSlate dark:text-neutral-300 mb-6">
+        {{ locale === 'th'
+          ? 'โซลูชันซอฟต์แวร์ที่ได้รับความไว้วางใจจากหน่วยงานภาครัฐ รัฐวิสาหกิจ และองค์กรเอกชนชั้นนำทั่วประเทศ'
+          : 'Trusted enterprise solutions empowering government agencies, public enterprises, and leading corporations.' }}
+      </p>
+
+      <!-- User Groups Grid -->
+      <div class="space-y-4 max-h-[58vh] overflow-y-auto pr-1 sm:pr-2">
+        <div
+          v-for="group in userGroups"
+          :key="group.id"
+          class="p-4 sm:p-5 rounded-2xl bg-[#F8FAF9] dark:bg-[#12261C] border border-forestBlack/5 dark:border-[#00C978]/20 hover:border-emerald-500/40 transition-all shadow-xs"
+        >
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+            <span class="text-xs font-bold text-[#00875A] dark:text-[#00E588] bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60 px-2.5 py-0.5 rounded-full">
+              {{ group.category }}
+            </span>
+            <span class="text-[11px] font-mono text-mutedSlate dark:text-neutral-400">
+              {{ group.badge }}
+            </span>
+          </div>
+
+          <h3 class="text-base sm:text-lg font-bold text-forestBlack dark:text-white mb-1.5">
+            {{ group.title }}
+          </h3>
+
+          <p class="text-xs sm:text-sm text-forestBlack/80 dark:text-neutral-300 leading-relaxed mb-3">
+            {{ group.description }}
+          </p>
+
+          <div class="flex flex-wrap items-center justify-between pt-3 border-t border-forestBlack/5 dark:border-white/10 gap-2">
+            <div class="inline-flex items-center gap-1.5 text-xs font-semibold text-emeraldCore dark:text-[#00E588]">
+              <span>📦 ซอฟต์แวร์ที่ใช้งาน:</span>
+              <span class="underline decoration-emerald-400/50">{{ group.product }}</span>
+            </div>
+            <div class="text-[11px] font-mono font-medium text-forestBlack/70 dark:text-neutral-400 bg-white dark:bg-[#07120D] px-2.5 py-1 rounded-lg border border-forestBlack/10 dark:border-white/10">
+              ✓ {{ group.stats }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer CTA -->
+      <div class="mt-6 pt-4 border-t border-forestBlack/10 dark:border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="text-xs text-mutedSlate dark:text-neutral-400">
+          มาตรฐานสากล ISO/IEC 29110 รับประกันคุณภาพทุกระบบ
+        </div>
+        <button
+          @click="handleConsultClick"
+          class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#00C978] hover:bg-[#00B368] text-forestBlack font-bold text-xs sm:text-sm transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+        >
+          <span>ปรึกษาทีมผู้เชี่ยวชาญ / นัดสาธิตระบบ</span>
+          <span>↗</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+</template>
