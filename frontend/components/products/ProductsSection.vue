@@ -1,791 +1,758 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAppI18n } from '~/composables/useI18n'
 import { useAppModal } from '~/composables/useModal'
 
 const { locale } = useAppI18n()
 const { openDemo, openChat } = useAppModal()
 
-export interface ProductItem {
+// ============================================================================
+// 1. FEATURED HIGHLIGHT CAROUSEL (ผลิตภัณฑ์ไฮไลต์ของ IGENCO)
+// ============================================================================
+export interface FeaturedSlide {
   id: string
-  number: string
-  categoryKey: 'enterprise-software' | 'service-development' | 'ecommerce'
-  categoryName: string
-  title: string
-  titleColor?: string
-  borderColor?: string
-  gradeText: string
-  gradeColor: 'emerald' | 'sky' | 'amber'
-  description: string
-  fullDescription?: string
-  features?: string[]
-  tags: string[]
-  priceText: string
-  imageType: 'photo' | 'graphic'
-  imageUrl?: string
+  numberBadge: string
+  awardBadge: string
+  title: { th: string; en: string }
+  description: { th: string; en: string }
+  image: string
+  features: { th: string; en: string }[]
 }
 
-// Active States
-const selectedLauncherId = ref<string>('hr-ai-platform')
-const activeCategory = ref<string>('all')
-const selectedProduct = ref<ProductItem | null>(null)
-
-// 4 Categories matching design screenshot
-const categories = computed(() => [
-  { key: 'all', name: locale.value === 'th' ? 'ทั้งหมด' : 'All Products', count: 9 },
-  { key: 'enterprise-software', name: 'Enterprise Software', count: 5 },
-  { key: 'service-development', name: 'Service Development', count: 3 },
-  { key: 'ecommerce', name: 'E-Commerce', count: 1 }
-])
-
-// 9 App Launcher Items matching Apple iOS Inspired Quick Launcher
-const appLaunchers = [
+const featuredSlides: FeaturedSlide[] = [
   {
-    id: 'hr-ai-platform',
-    name: 'HR.ai 2026',
-    badge: 'NEW',
-    badgeColor: 'bg-[#0284C7] text-white',
-    iconBg: 'bg-gradient-to-br from-[#0284C7] to-[#0369A1]',
-    iconColor: 'text-white'
+    id: 'hr-ai',
+    numberBadge: '01 / 05 • FLAGSHIP HR & PAYROLL',
+    awardBadge: '🏆 The Winner OIIO',
+    title: {
+      th: 'HR.ai — ระบบบริหารทรัพยากรมนุษย์อัจฉริยะ',
+      en: 'HR.ai — Intelligent Human Resource & Payroll'
+    },
+    description: {
+      th: 'ลงเวลาทำงานผ่าน GPS / Face Recognition บนมือถือ คำนวณเงินเดือน ภาษี สวัสดิการ และประเมินผล KPI อัตโนมัติ ครบจบในแพลตฟอร์มเดียวสำหรับองค์กรยุคใหม่',
+      en: 'Mobile GPS & Face Recognition check-in, automated payroll, tax, benefits, and 360° KPI performance evaluations on a unified platform for modern enterprises.'
+    },
+    image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1200&q=80',
+    features: [
+      { th: 'ลงเวลางานผ่านมือถือพร้อมตรวจจับใบหน้าและพิกัด GPS', en: 'Mobile GPS & facial recognition attendance tracking' },
+      { th: 'คำนวณเงินเดือน ภาษี ประกันสังคมอัตโนมัติ ถูกต้องตามกฎหมาย 100%', en: '100% automated payroll, tax, and social security processing' },
+      { th: 'ระบบพอร์ทัลพนักงาน ESS และหัวหน้างาน MSS ออนไลน์', en: 'Employee Self-Service (ESS) and Manager Portals (MSS)' }
+    ]
   },
   {
     id: 'ismartflow',
-    name: 'iSmartFlow',
-    badge: null,
-    iconBg: 'bg-gradient-to-br from-[#00C978] to-[#059669]',
-    iconColor: 'text-white'
+    numberBadge: '02 / 05 • E-OFFICE & SARABAN',
+    awardBadge: '⭐ ISO/IEC 29110 Certified',
+    title: {
+      th: 'i-SMARTFLOW — ระบบสารบรรณและสำนักงานอัตโนมัติ',
+      en: 'i-SMARTFLOW — e-Saraban & Office Automation'
+    },
+    description: {
+      th: 'ระบบบริหารงานสารบรรณอิเล็กทรอนิกส์ จัดการหนังสือราชการและเอกสารภายใน เกษียณหนังสือ และลงนามดิจิทัลมาตรฐานสากล ลดกระดาษ 100%',
+      en: 'Enterprise e-Office & e-Saraban platform for document routing, legal digital signatures, and workflow automation, achieving 100% paperless efficiency.'
+    },
+    image: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=1200&q=80',
+    features: [
+      { th: 'รับ-ส่งหนังสือราชการ เกษียณหนังสือ และลงนามดิจิทัลถูกต้องตามกฎหมาย', en: 'Electronic memo receipt, dispatch, minute endorsement, and digital signature' },
+      { th: 'กำหนดสายการอนุมัติ (Approval Workflow) ได้ยืดหยุ่นตามโครงสร้างหน่วยงาน', en: 'Customizable multi-tier approval routing for complex organizations' },
+      { th: 'ระบบสืบค้นเอกสารอัจฉริยะแบบ OCR และ Full-Text Search', en: 'High-speed OCR and full-text document search' }
+    ]
   },
   {
-    id: 'iserff-enterprise',
-    name: 'I-SERFF',
-    badge: null,
-    iconBg: 'bg-gradient-to-br from-[#064E3B] to-[#032B20]',
-    iconColor: 'text-[#00E588]'
+    id: 'iserff',
+    numberBadge: '03 / 05 • REGULATORY REGTECH',
+    awardBadge: '🏛️ มาตรฐาน คปภ.',
+    title: {
+      th: 'I-SERFF Enterprise — ระบบยื่นแบบกรมธรรม์ประกันภัย',
+      en: 'I-SERFF Enterprise — OIC Regulatory Filing System'
+    },
+    description: {
+      th: 'ระบบยื่นขอรับความเห็นชอบแบบและข้อความกรมธรรม์ประกันภัยทางอิเล็กทรอนิกส์ เชื่อมต่อสำนักงาน คปภ. ทั่วประเทศ ปลอดภัยระดับ Zero-Trust',
+      en: 'Electronic insurance policy filing and endorsement submission gateway directly connecting with the Office of Insurance Commission nationwide.'
+    },
+    image: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=1200&q=80',
+    features: [
+      { th: 'เชื่อมต่อระบบยื่นแบบกับสำนักงาน คปภ. โดยตรง', en: 'Direct API integration with the OIC regulatory gateway' },
+      { th: 'ตรวจสอบความถูกต้องของเอกสารและไฟล์แนบก่อนนำส่งอัตโนมัติ', en: 'Automated schema and document completeness validation' },
+      { th: 'สถาปัตยกรรมความปลอดภัย Zero-Trust และการเข้ารหัสข้อมูลระดับสถาบันการเงิน', en: 'Zero-Trust security posture and bank-grade data encryption' }
+    ]
   },
   {
-    id: 'efms-filing',
-    name: 'EFMS Suite',
-    badge: null,
-    iconBg: 'bg-gradient-to-br from-[#0D9488] to-[#0F766E]',
-    iconColor: 'text-white'
+    id: 'ifinsoft',
+    numberBadge: '04 / 05 • ACCOUNTING & ERP',
+    awardBadge: '💼 Enterprise Solution',
+    title: {
+      th: 'i-FINSOFT ERP — ระบบบริหารบัญชี การเงิน และทรัพยากรองค์กร',
+      en: 'i-FINSOFT ERP — Financial & Resource Management'
+    },
+    description: {
+      th: 'ระบบบัญชีและการเงินมาตรฐานครบวงจร เชื่อมโยงบัญชีแยกประเภท งบประมาณ ลูกหนี้ เจ้าหนี้ และออกงบการเงินได้อย่างแม่นยำ',
+      en: 'Comprehensive accounting and financial management software integrating general ledger, receivables, payables, and corporate budgeting.'
+    },
+    image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80',
+    features: [
+      { th: 'เชื่อมโยงข้อมูลผังบัญชี ลูกหนี้ เจ้าหนี้ และระบบจัดซื้อครบวงจร', en: 'Unified chart of accounts, AR, AP, and procurement integration' },
+      { th: 'บริหารงบประมาณและออกงบการเงินแบบเรียลไทม์', en: 'Real-time budget control and automated financial reporting' },
+      { th: 'ผ่านการรับรองมาตรฐานซอฟต์แวร์วิศวกรรม ISO/IEC 29110', en: 'Certified under ISO/IEC 29110 software engineering standards' }
+    ]
   },
   {
-    id: 'rag-engine',
-    name: 'AI RAG',
-    badge: 'AI',
-    badgeColor: 'bg-[#00C978] text-[#09140E]',
-    iconBg: 'bg-gradient-to-br from-[#09140E] to-[#122A1E]',
-    iconColor: 'text-[#00E588]'
-  },
-  {
-    id: 'agentic-core',
-    name: 'Agentic AI',
-    badge: null,
-    iconBg: 'bg-gradient-to-br from-[#4F46E5] to-[#4338CA]',
-    iconColor: 'text-white'
-  },
-  {
-    id: 'eprocurement-pro',
-    name: 'e-Procure',
-    badge: null,
-    iconBg: 'bg-gradient-to-br from-[#EA580C] to-[#C2410C]',
-    iconColor: 'text-white'
-  },
-  {
-    id: 'idp-ocr',
-    name: 'AI OCR',
-    badge: null,
-    iconBg: 'bg-gradient-to-br from-[#1F2937] to-[#111827]',
-    iconColor: 'text-white'
-  },
-  {
-    id: 'smart-erp',
-    name: 'ERP & WMS',
-    badge: null,
-    iconBg: 'bg-gradient-to-br from-[#059669] to-[#047857]',
-    iconColor: 'text-white'
+    id: 'iregist-igenq',
+    numberBadge: '05 / 05 • SMART REGISTRATION & QUEUING',
+    awardBadge: '🎫 Event & Service Tech',
+    title: {
+      th: 'i-Regist & iGenQ — ระบบลงทะเบียนและคิวอัจฉริยะ',
+      en: 'i-Regist & iGenQ — Smart Registration & Queuing'
+    },
+    description: {
+      th: 'แพลตฟอร์มบริหารการลงทะเบียนงานสัมมนา อีเวนต์ พร้อมระบบจัดคิวอัจฉริยะ ออก QR Code เช็กอินหน้างาน และลดเวลารอคอยได้อย่างมีประสิทธิภาพ',
+      en: 'End-to-end event registration, automated QR check-in, and smart queuing orchestration tailored for conferences, hospitals, and citizen centers.'
+    },
+    image: 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=1200&q=80',
+    features: [
+      { th: 'ระบบจองและออก QR Code เช็กอินเข้าร่วมงานสะดวกรวดเร็ว', en: 'Instant online booking and QR Code digital badge check-in' },
+      { th: 'ระบบจัดคิวอัจฉริยะ iGenQ คำนวณเวลารอคอยแบบเรียลไทม์', en: 'iGenQ intelligent queuing with real-time wait estimation' },
+      { th: 'ออกใบประกาศนียบัตรออนไลน์และสรุปสถิติผู้เข้าร่วมงาน', en: 'Automated e-Certificates and live attendee analytics' }
+    ]
   }
 ]
 
-// English translations dictionary for dynamic locale switching
-const enTranslations: Record<string, { categoryName?: string; title?: string; description?: string; fullDescription?: string; features?: string[]; priceText?: string }> = {
-  ismartflow: {
-    categoryName: 'Smart Software',
-    title: 'iSmartFlow',
-    description: 'Electronic office administration system (e-Office / e-Saraban) and automated approval routing, streamlining enterprise document workflows.',
-    fullDescription: 'iSmartFlow is an enterprise e-Office & e-Saraban platform certified under ISO/IEC 29110 standards. It features legally-binding Digital Signatures, dynamic multi-tier approval routing, and seamless REST API integrations.',
-    features: [
-      'Electronic document lifecycle: dispatch, receipt, endorsement, and digital signature',
-      'Fully customizable, multi-tier dynamic approval workflows',
-      'Omnichannel alerts via LINE Notify, Email, and Mobile Web',
-      'Optical Character Recognition (OCR) and high-speed full-text search'
-    ],
-    priceText: 'Contact Sales'
-  },
-  'hr-ai-platform': {
-    categoryName: 'HR Management',
-    title: 'HR.ai Platform 2026',
-    description: 'Smart Human Resource Management platform encompassing Time Attendance, Automated Payroll, Flexible Benefits, and OKRs/KPIs.',
-    fullDescription: 'HR.ai Platform 2026 elevates human capital management with AI-powered automation, mobile GPS time tracking, Thai labor law-compliant payroll, flexible benefit plans, and 360-degree performance intelligence.',
-    features: [
-      'Mobile time attendance with facial recognition and geo-fenced GPS',
-      '1-click payroll, social security, withholding tax, and bank file generation',
-      'Comprehensive Employee Self-Service (ESS) and Manager Portals (MSS)',
-      '360-degree smart OKR and KPI evaluation dashboards'
-    ],
-    priceText: 'Starts 15,000 THB/mo'
-  },
-  'iserff-enterprise': {
-    categoryName: 'OIC Regulatory Standard',
-    title: 'I-SERFF Enterprise',
-    description: 'Electronic insurance policy filing and endorsement submission system compliant with OIC national regulatory standards.',
-    fullDescription: 'Purpose-built to interface with the Office of Insurance Commission (OIC) I-SERFF infrastructure, enabling non-life and life insurance enterprises to validate and submit regulatory filings with bank-grade encryption.',
-    features: [
-      'Direct API integration with the OIC regulatory gateway',
-      'Automated document completeness & schema compliance validation',
-      'Zero-trust security and end-to-end cryptographic encryption',
-      'Real-time regulatory approval status tracking and audit trail'
-    ],
-    priceText: 'Tailored for Enterprise'
-  },
-  'efms-filing': {
-    categoryName: 'DPA RegTech System',
-    title: 'EFMS Data Filing Suite',
-    description: 'Electronic filing and data exchange gateway between the Deposit Protection Agency and member financial institutions.',
-    fullDescription: 'A high-throughput electronic filing pipeline connecting commercial banks with the Deposit Protection Agency (DPA), guaranteeing 99.99% availability and cryptographic data integrity.',
-    features: [
-      'AES-256 encrypted banking file interchange protocols',
-      'Automated deposit data structure validation & anomaly detection',
-      'Comprehensive immutable audit logging for regulatory inspection'
-    ],
-    priceText: 'Contact Sales'
-  },
-  'rag-engine': {
-    categoryName: 'AI & Knowledge Base',
-    title: 'AI Knowledge & RAG Engine',
-    description: 'Enterprise semantic search and RAG synthesis engine with 100% verified citations, zero hallucination.',
-    fullDescription: 'Unleash sovereign Large Language Models atop internal document repositories, transforming corporate policies, manuals, and compliance archives into an interactive, verifiable Knowledge Graph.',
-    features: [
-      'Bilingual Thai/English deep semantic retrieval',
-      'Exact citation page references on every response for total audibility',
-      'Deployable On-Premise or in dedicated Sovereign Private Cloud'
-    ],
-    priceText: 'Starts 29,000 THB/mo'
-  },
-  'agentic-core': {
-    categoryName: 'Autonomous AI',
-    title: 'Autonomous Agentic Core',
-    description: 'Autonomous cognitive AI agent network collaborating 24/7 with human teams for automated workflow execution.',
-    fullDescription: 'Multi-Agent collaborative intelligence that plans, reasons, and executes multi-stage enterprise operations with human-in-the-loop governance.',
-    features: [
-      'Multi-Agent orchestration architecture with shared memory',
-      'Secure external API & database tool invocation framework',
-      'Human-in-the-loop approval gates for critical actions'
-    ],
-    priceText: 'Custom Assessment'
-  },
-  'eprocurement-pro': {
-    categoryName: 'Procurement & Contract',
-    title: 'e-Procurement & Contract',
-    description: 'Comprehensive procurement lifecycle management, e-Bidding auctions, and transparent contract tracking.',
-    fullDescription: 'Comprehensive procurement lifecycle management from PR/PO initiation, online e-Bidding auctions, vendor vetting, through goods receipt and ERP reconciliation.',
-    features: [
-      'Full compliance with Ministry of Finance procurement regulations',
-      'Interactive Vendor Portal for online bid submission and invoice tracking',
-      'Automated multi-criteria price comparison and scoring analytics'
-    ],
-    priceText: 'Contact Sales'
-  },
-  'idp-ocr': {
-    categoryName: 'Smart AI OCR',
-    title: 'AI Vision & Document OCR',
-    description: 'High-precision intelligent document processing to extract structured data from tax invoices, IDs, and financial contracts.',
-    fullDescription: 'Converts scanned paperwork and digital PDFs into ERP-ready structured data using specialized Computer Vision and Thai-English NLP models.',
-    features: [
-      'Scans receipts, tax invoices, national IDs, and structured business forms',
-      '>99.4% extraction accuracy on complex Thai fonts and numerical tables',
-      'Automated structured data dispatch to SAP, Oracle, and enterprise ERPs'
-    ],
-    priceText: 'Starts 19,000 THB/mo'
-  },
-  'smart-erp': {
-    categoryName: 'ERP & Warehouse',
-    title: 'Enterprise ERP & Inventory',
-    description: 'Enterprise resource planning & smart inventory management linking supply chain, accounting, and barcode/QR logistics.',
-    fullDescription: 'Real-time multi-branch ERP and inventory optimization, tracking stock movements, profitability analytics, and AI predictive demand forecasting.',
-    features: [
-      'Real-time multi-warehouse inventory and barcode tracking',
-      'Integrated general ledger, corporate finance, and budget allocation',
-      'Predictive sales trends and automated re-order planning',
-      'Unified Point of Sale (POS) and omnichannel e-Commerce synchronization'
-    ],
-    priceText: 'Tailored for Enterprise'
+const currentSlideIndex = ref(0)
+const isAutoPlay = ref(true)
+let autoPlayTimer: any = null
+
+const nextSlide = () => {
+  currentSlideIndex.value = (currentSlideIndex.value + 1) % featuredSlides.length
+}
+
+const prevSlide = () => {
+  currentSlideIndex.value = (currentSlideIndex.value - 1 + featuredSlides.length) % featuredSlides.length
+}
+
+const goToSlide = (idx: number) => {
+  currentSlideIndex.value = idx
+}
+
+const toggleAutoPlay = () => {
+  isAutoPlay.value = !isAutoPlay.value
+  if (isAutoPlay.value) {
+    startAutoPlay()
+  } else {
+    stopAutoPlay()
   }
 }
 
-const getProductField = (product: ProductItem, field: 'categoryName' | 'title' | 'description' | 'fullDescription' | 'priceText'): string => {
-  if (locale.value === 'en' && enTranslations[product.id] && enTranslations[product.id][field]) {
-    return enTranslations[product.id][field] as string
-  }
-  return product[field] || ''
+const startAutoPlay = () => {
+  stopAutoPlay()
+  autoPlayTimer = setInterval(() => {
+    if (isAutoPlay.value) {
+      nextSlide()
+    }
+  }, 5000)
 }
 
-const getProductFeatures = (product: ProductItem): string[] => {
-  if (locale.value === 'en' && enTranslations[product.id] && enTranslations[product.id].features) {
-    return enTranslations[product.id].features as string[]
+const stopAutoPlay = () => {
+  if (autoPlayTimer) {
+    clearInterval(autoPlayTimer)
+    autoPlayTimer = null
   }
-  return product.features || []
 }
 
-// 9 Products List matching Image 1, 2, 3, 4
-const products = ref<ProductItem[]>([
-  {
-    id: 'ismartflow',
-    number: '01',
-    categoryKey: 'enterprise-software',
-    categoryName: 'ซอฟต์แวร์อัจฉริยะ',
-    title: 'iSmartFlow',
-    gradeText: 'ENTERPRISE GRADE',
-    gradeColor: 'emerald',
-    description: 'ระบบบริหารสำนักงานอิเล็กทรอนิกส์ (e-Office / e-Saraban) และสายอนุมัติอัตโนมัติ ลดขั้นตอนงานเอกสารภายในองค์กรอย่างครบวงจร',
-    fullDescription: 'iSmartFlow เป็นระบบบริหารจัดการงานสารบรรณอิเล็กทรอนิกส์และเอกสารเวียนภายในองค์กร (e-Saraban) ที่ออกแบบตามระเบียบสารบรรณอิเล็กทรอนิกส์ภาครัฐและมาตรฐาน ISO 29110 รองรับการลงนามดิจิทัล (Digital Signature), การสร้างสายอนุมัติแบบ Dynamic Approval Flow, และการเชื่อมต่อผ่าน REST API',
-    features: [
-      'ระบบสารบรรณอิเล็กทรอนิกส์ รับ-ส่ง เกษียณหนังสือ และลงนามดิจิทัล',
-      'ออกแบบ Workflow สายอนุมัติได้อิสระ ไม่จำกัดลำดับขั้น',
-      'แจ้งเตือนผ่าน Line Notify, Email และ Mobile Web App',
-      'รองรับการค้นหาเอกสารแบบ OCR และ Full-Text Search'
-    ],
-    tags: ['Cloud Native', 'API Ready', 'Paperless'],
-    priceText: 'ติดต่อฝ่ายขาย',
-    imageType: 'photo',
-    imageUrl: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80'
-  },
-  {
-    id: 'hr-ai-platform',
-    number: '02',
-    categoryKey: 'enterprise-software',
-    categoryName: 'บริหารทรัพยากรบุคคล',
-    title: 'HR.ai Platform 2026',
-    titleColor: 'text-[#0284C7]',
-    borderColor: 'border-2 border-[#38BDF8] ring-4 ring-[#38BDF8]/15',
-    gradeText: 'ENTERPRISE GRADE',
-    gradeColor: 'sky',
-    description: 'ระบบบริหารทรัพยากรมนุษย์อัจฉริยะ ครอบคลุมการลงเวลา คำนวณเงินเดือน ภาษี สวัสดิการ และประเมินผล KPI ครบวงจร',
-    fullDescription: 'HR.ai Platform 2026 ยกระดับการบริหารงานบุคคลด้วยเทคโนโลยีปัญญาประดิษฐ์ ผสานโมดูล Time Attendance แบบ GPS Check-in, คำนวณ Payroll อัตโนมัติตามกฎหมายแรงงานไทย, บริหารสวัสดิการยืดหยุ่น (Flexible Benefits) และวิเคราะห์ Performance ด้วย AI Insights',
-    features: [
-      'ลงเวลางานผ่านมือถือ พร้อมระบบตรวจจับใบหน้าและพิกัด GPS',
-      'คำนวณเงินเดือน ภาษี ประกันสังคม และส่งออกไฟล์ธนาคารในคลิกเดียว',
-      'ระบบ Employee Self-Service (ESS) และ Manager Self-Service (MSS)',
-      'ระบบประเมินผลงาน OKRs / KPIs อัจฉริยะแบบ 360 องศา'
-    ],
-    tags: ['Enterprise Grade', 'ESS / MSS', 'AI Analytics'],
-    priceText: 'เริ่มต้น 15,000 บาท/เดือน',
-    imageType: 'photo',
-    imageUrl: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=800&q=80'
-  },
-  {
-    id: 'iserff-enterprise',
-    number: '03',
-    categoryKey: 'enterprise-software',
-    categoryName: 'ระบบมาตรฐาน คปภ.',
-    title: 'I-SERFF Enterprise',
-    gradeText: 'ENTERPRISE GRADE',
-    gradeColor: 'amber',
-    description: 'ระบบยื่นขอรับความเห็นชอบแบบและข้อความกรมธรรม์ประกันภัยทางอิเล็กทรอนิกส์ เชื่อมต่อมาตรฐานสำนักงาน คปภ.',
-    fullDescription: 'I-SERFF Enterprise Solution พัฒนาขึ้นเพื่อเชื่อมต่อและทำงานร่วมกับระบบ I-SERFF ของสำนักงาน คปภ. โดยเฉพาะ ช่วยให้บริษัทประกันวินาศภัยและประกันชีวิตสามารถจัดเตรียม ตรวจสอบ และยื่นแบบเอกสารได้อย่างถูกต้อง รวดเร็ว ปลอดภัยตามมาตรฐานความปลอดภัยข้อมูลระดับสถาบันการเงิน',
-    features: [
-      'เชื่อมโยงระบบการยื่นเอกสารกับมาตรฐาน คปภ. โดยตรง',
-      'ระบบตรวจสอบความครบถ้วนของเอกสารและไฟล์แนบก่อนนำส่ง',
-      'มาตรการความปลอดภัย Zero-Trust และการเข้ารหัสแบบ End-to-End',
-      'รายงานสถานะการขอรับความเห็นชอบแบบเรียลไทม์'
-    ],
-    tags: ['OIC Standard', 'Zero-Trust', 'ISO 29110'],
-    priceText: 'ประเมินราคาตามขนาดองค์กร',
-    imageType: 'graphic'
-  },
-  {
-    id: 'efms-filing',
-    number: '04',
-    categoryKey: 'enterprise-software',
-    categoryName: 'ระบบข้อมูล สคฝ.',
-    title: 'EFMS Data Filing Suite',
-    gradeText: 'ENTERPRISE GRADE',
-    gradeColor: 'emerald',
-    description: 'ระบบรับและจัดเก็บข้อมูลอิเล็กทรอนิกส์ระหว่างสถาบันคุ้มครองเงินฝากและสถาบันการเงิน มาตรฐานความปลอดภัยสูงสุด',
-    fullDescription: 'ระบบเชื่อมโยงและจัดเก็บข้อมูลอิเล็กทรอนิกส์ระหว่างสถาบันการเงินและสถาบันคุ้มครองเงินฝาก (สคฝ.) มั่นใจในความถูกต้องของข้อมูลเงินฝากและการประมวลผลที่มีเสถียรภาพระดับ 99.99%',
-    features: [
-      'ระบบรับส่งไฟล์ข้อมูลที่เข้ารหัสขั้นสูง AES-256',
-      'การตรวจสอบรูปแบบและโครงสร้างข้อมูลเงินฝากอัตโนมัติ (Automated Validation)',
-      'ระบบ Audit Trail บันทึกประวัติการเข้าถึงข้อมูลทุกจุด'
-    ],
-    tags: ['RegTech', 'AES-256', 'Audit Trail'],
-    priceText: 'ติดต่อฝ่ายขาย',
-    imageType: 'photo',
-    imageUrl: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=800&q=80'
-  },
-  {
-    id: 'rag-engine',
-    number: '05',
-    categoryKey: 'service-development',
-    categoryName: 'AI & Knowledge Base',
-    title: 'AI Knowledge & RAG Engine',
-    gradeText: 'ENTERPRISE GRADE',
-    gradeColor: 'emerald',
-    description: 'ระบบสืบค้นและสังเคราะห์ฐานความรู้องค์กรแบบ Semantic Search แม่นยำ 100% ปราศจาก AI Hallucination',
-    fullDescription: 'ผสานพลัง Private Large Language Model เข้ากับฐานข้อมูลเอกสารภายในองค์กร แปลงข้อมูลนโยบาย ระเบียบปฏิบัติ และคู่มือการทำงานให้เป็น Knowledge Graph ที่ค้นหาและตอบคำถามได้อย่างชาญฉลาด',
-    features: [
-      'ค้นหาความหมาย (Semantic Search) ได้ทั้งภาษาไทยและอังกฤษ',
-      'แสดงเอกสารและหน้าอ้างอิงทุกคำตอบ ตรวจสอบย้อนกลับได้ทันที',
-      'ติดตั้งได้ทั้งแบบ On-Premise หรือ Private Cloud'
-    ],
-    tags: ['Private LLM', 'Semantic Search', 'Hallucination-Free'],
-    priceText: 'เริ่มต้น 29,000 บาท/เดือน',
-    imageType: 'photo',
-    imageUrl: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&q=80'
-  },
-  {
-    id: 'agentic-core',
-    number: '06',
-    categoryKey: 'service-development',
-    categoryName: 'Autonomous AI',
-    title: 'Autonomous Agentic Core',
-    gradeText: 'ENTERPRISE GRADE',
-    gradeColor: 'sky',
-    description: 'ระบบตัวแทน AI อัตโนมัติ ปฏิบัติการร่วมกับมนุษย์ 24/7 เพื่อวิเคราะห์ข้อมูลเชิงลึกและบริหารขั้นตอนธุรกิจอัตโนมัติ',
-    fullDescription: 'โครงข่าย Multi-Agent AI ที่สามารถแบ่งงาน วางแผน และประสานงานกันทำงานที่ซับซ้อน เช่น การสรุปรายงานการประชุม, การจัดสรรทรัพยากร, และการตรวจสอบทุจริตธุรกรรม',
-    features: [
-      'รองรับการทำงานแบบ Multi-Agent Collaborative Architecture',
-      'เชื่อมต่อ Tool, API และฐานข้อมูลภายนอกได้อย่างปลอดภัย',
-      'Human-in-the-loop มีระบบให้มนุษย์อนุมัติการตัดสินใจสำคัญ'
-    ],
-    tags: ['Multi-Agent', 'Real-Time', 'Workflow Automation'],
-    priceText: 'ประเมินตามเวิร์กโฟลว์',
-    imageType: 'photo',
-    imageUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80'
-  },
-  {
-    id: 'eprocurement-pro',
-    number: '07',
-    categoryKey: 'ecommerce',
-    categoryName: 'จัดซื้อจัดจ้าง',
-    title: 'e-Procurement & Contract',
-    gradeText: 'ENTERPRISE GRADE',
-    gradeColor: 'emerald',
-    description: 'ระบบบริหารการจัดซื้อจัดจ้าง ประกวดราคา และติดตามสัญญาองค์กรอย่างโปร่งใส ตรวจสอบได้ทุกขั้นตอน',
-    fullDescription: 'ระบบบริหารการจัดซื้อจัดจ้างแบบครบวงจร ตั้งแต่การเปิดขอซื้อ (PR), ขอจ้าง (PO), การประมูลออนไลน์ (e-Bidding), จนถึงการตรวจรับพัสดุและเชื่อมโยงระบบบัญชี',
-    features: [
-      'รองรับระเบียบกระทรวงการคลังว่าด้วยการจัดซื้อจัดจ้างพัสดุ',
-      'ระบบ Portal สำหรับคู่ค้า (Vendor Portal) ส่งใบเสนอราคาออนไลน์',
-      'เปรียบเทียบราคาและประเมินเกณฑ์การคัดเลือกอัตโนมัติ'
-    ],
-    tags: ['e-Bidding', 'Contract Lifecycle', 'Audit Ready'],
-    priceText: 'ติดต่อฝ่ายขาย',
-    imageType: 'photo',
-    imageUrl: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=800&q=80'
-  },
-  {
-    id: 'idp-ocr',
-    number: '08',
-    categoryKey: 'service-development',
-    categoryName: 'AI OCR อัจฉริยะ',
-    title: 'AI Vision & Document OCR',
-    gradeText: 'ENTERPRISE GRADE',
-    gradeColor: 'emerald',
-    description: 'ระบบอ่านและแปลงข้อมูลจากเอกสารภาษาไทยและอังกฤษ ใบกำกับภาษี บัตรประชาชน และสัญญาเป็นข้อมูลดิจิทัลอัตโนมัติ',
-    fullDescription: 'เปลี่ยนเอกสารกระดาษและไฟล์ภาพสแกนให้เป็นข้อมูลดิจิทัลพร้อมใช้งานในระบบ ERP ทันที ด้วยโมเดล Computer Vision & NLP ที่ผ่านการฝึกฝนเอกสารภาษาไทยเฉพาะทาง',
-    features: [
-      'อ่านเอกสารใบเสร็จ ใบกำกับภาษี บัตรประชาชน และแบบฟอร์มธุรกิจ',
-      'ความแม่นยำภาษาไทยและตัวเลขสูงกว่า 99.4%',
-      'ส่งออกข้อมูลสู่ระบบ ERP, SAP, Oracle ได้อัตโนมัติ'
-    ],
-    tags: ['Thai/EN OCR', 'Auto Indexing', '99.4% Accuracy'],
-    priceText: 'เริ่มต้น 19,000 บาท/เดือน',
-    imageType: 'photo',
-    imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80'
-  },
-  {
-    id: 'smart-erp',
-    number: '09',
-    categoryKey: 'enterprise-software',
-    categoryName: 'ERP & คลังสินค้า',
-    title: 'Enterprise ERP & Inventory',
-    gradeText: 'ENTERPRISE GRADE',
-    gradeColor: 'emerald',
-    description: 'ระบบบริหารทรัพยากรองค์กร บัญชี การเงิน และบริหารคลังสินค้าอัจฉริยะ รองรับการเชื่อมต่อบาร์โค้ดและ QR Code',
-    fullDescription: 'แพลตฟอร์มบริหารจัดการทรัพยากรองค์กรแบบเรียลไทม์ ติดตามสต็อกสินค้าข้ามสาขา วิเคราะห์ยอดขาย พยากรณ์ความต้องการสินค้าล่วงหน้าด้วย AI Predictive Models',
-    features: [
-      'บริหารจัดการสต็อก คลังสินค้า และบาร์โค้ดแบบ Real-time',
-      'ระบบบัญชี การเงิน และการจัดทำงบประมาณองค์กร',
-      'แดชบอร์ดสรุปผลการดำเนินงานสำหรับผู้บริหารระดับ C-Level'
-    ],
-    tags: ['Financial Core', 'Smart Warehouse', 'ISO 29110'],
-    priceText: 'ประเมินราคาตามขนาดองค์กร',
-    imageType: 'photo',
-    imageUrl: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=800&q=80'
-  }
-])
+// ============================================================================
+// 2. 12 ALL PRODUCTS & SERVICES OF IGENCO (ผลิตภัณฑ์และบริการทั้งหมด)
+// ============================================================================
+export interface SolutionCard {
+  id: string
+  iconType: string
+  iconBg: string
+  iconColor: string
+  tag: string
+  title: string
+  subtitle: { th: string; en: string }
+  description: { th: string; en: string }
+  tags: string[]
+}
 
-// Filtered products list based on active category
-const filteredProducts = computed(() => {
-  if (activeCategory.value === 'all') {
-    return products.value
+const solutionsList: SolutionCard[] = [
+  {
+    id: 'i-smartflow',
+    iconType: 'document-pen',
+    iconBg: 'bg-[#E8F8F2] border border-[#B5EAD3]',
+    iconColor: 'text-[#00875A]',
+    tag: 'e-Office & Workflow',
+    title: 'i-SMARTFLOW',
+    subtitle: {
+      th: 'โปรแกรมระบบบริหารสำนักงานอัตโนมัติ (e-Office)',
+      en: 'Enterprise e-Office & Workflow Automation'
+    },
+    description: {
+      th: 'ระบบสารบรรณอิเล็กทรอนิกส์และสายอนุมัติเอกสารอัตโนมัติ ลดการใช้กระดาษ ติดตามสถานะเอกสารแบบเรียลไทม์ รองรับการลงนามดิจิทัล',
+      en: 'Electronic document lifecycle management with dynamic approval flows, digital signatures, and real-time tracking.'
+    },
+    tags: ['e-Saraban', 'Paperless', 'Digital Sign']
+  },
+  {
+    id: 'hr-ai',
+    iconType: 'users',
+    iconBg: 'bg-[#E0F2FE] border border-[#BAE6FD]',
+    iconColor: 'text-[#0284C7]',
+    tag: 'HR & Payroll Cloud',
+    title: 'HR.ai (i-Huris)',
+    subtitle: {
+      th: 'ระบบบริหารทรัพยากรมนุษย์และเงินเดือนครบวงจร',
+      en: 'Comprehensive Human Capital & Payroll Suite'
+    },
+    description: {
+      th: 'ซอฟต์แวร์บริหารงานบุคคลรางวัลชนะเลิศ The Winner OIIO ครอบคลุมการลงเวลา คำนวณเงินเดือน ภาษี สวัสดิการ และประเมินผล KPI',
+      en: 'Award-winning OIIO human resource software covering mobile attendance, payroll, tax, benefits, and KPI evaluation.'
+    },
+    tags: ['Payroll', 'Mobile Time', 'OIIO Winner']
+  },
+  {
+    id: 'i-finsoft',
+    iconType: 'pie-chart',
+    iconBg: 'bg-[#CCFBF1] border border-[#99F6E4]',
+    iconColor: 'text-[#0D9488]',
+    tag: 'Accounting & ERP',
+    title: 'i-FINSOFT — ERP',
+    subtitle: {
+      th: 'ระบบบริหารบัญชี การเงิน และทรัพยากรองค์กร',
+      en: 'Financial Accounting & Enterprise Planning'
+    },
+    description: {
+      th: 'ระบบบัญชีและการเงินมาตรฐานครบวงจร เชื่อมโยงข้อมูลบัญชีแยกประเภท เจ้าหนี้ ลูกหนี้ งบประมาณ และออกงบการเงินได้อย่างแม่นยำ',
+      en: 'Standardized accounting and finance management linking GL, AR, AP, budgeting, and precision financial statements.'
+    },
+    tags: ['General Ledger', 'Budgeting', 'Financial Report']
+  },
+  {
+    id: 'igenco-bsc',
+    iconType: 'target',
+    iconBg: 'bg-[#EDE9FE] border border-[#DDD6FE]',
+    iconColor: 'text-[#7C3AED]',
+    tag: 'KPI & Balanced Scorecard',
+    title: 'iGenco BSC',
+    subtitle: {
+      th: 'ระบบประเมินและวัดผลการปฏิบัติงานองค์กร',
+      en: 'Enterprise Performance & KPI Measurement'
+    },
+    description: {
+      th: 'ระบบบริหารจัดการตัวชี้วัด (KPI) ตามแนวคิด Balanced Scorecard เชื่อมโยงเป้าหมายระดับองค์กรสู่ระดับฝ่ายและรายบุคคลอย่างเป็นรูปธรรม',
+      en: 'Balanced Scorecard and KPI performance tracking aligning strategic corporate objectives with department and employee goals.'
+    },
+    tags: ['KPI Tracking', 'Scorecard', 'Performance']
+  },
+  {
+    id: 'i-regist',
+    iconType: 'badge-id',
+    iconBg: 'bg-[#F3E8FF] border border-[#E9D5FF]',
+    iconColor: 'text-[#9333EA]',
+    tag: 'Smart Registration',
+    title: 'i-Regist',
+    subtitle: {
+      th: 'ระบบลงทะเบียนที่ตอบโจทย์ทุกการลงทะเบียน',
+      en: 'Smart Event & Seminar Registration Platform'
+    },
+    description: {
+      th: 'แพลตฟอร์มบริหารจัดการการลงทะเบียนงานสัมมนา อีเวนต์ และการอบรม รองรับการออก QR Code เช็กอินหน้างาน และออกใบประกาศฯ',
+      en: 'Event, training, and conference registration platform with automated QR Code on-site check-in and e-Certificate generation.'
+    },
+    tags: ['QR Check-in', 'Event Badge', 'Certificate']
+  },
+  {
+    id: 'i-education',
+    iconType: 'graduation',
+    iconBg: 'bg-[#FEF3C7] border border-[#FDE68A]',
+    iconColor: 'text-[#D97706]',
+    tag: 'Academic Management',
+    title: 'i-EDUCATION',
+    subtitle: {
+      th: 'ระบบบริหารจัดการด้านการศึกษาและสถานศึกษา',
+      en: 'Academic & Institutional Management System'
+    },
+    description: {
+      th: 'ระบบสารสนเทศสำหรับสถาบันการศึกษา ครอบคลุมประวัตินักศึกษา การลงทะเบียนเรียน ตารางสอน การวัดผล และระบบเกรดออนไลน์',
+      en: 'Campus information system covering student records, course registration, scheduling, assessment, and online grading.'
+    },
+    tags: ['Student Portal', 'Grading System', 'Course Registration']
+  },
+  {
+    id: 'i-real-estate',
+    iconType: 'building',
+    iconBg: 'bg-[#E6F4EA] border border-[#CEEAD6]',
+    iconColor: 'text-[#137333]',
+    tag: 'Property & Condo CRM',
+    title: 'i-Real Estate',
+    subtitle: {
+      th: 'ระบบบริหารการขายและจองโครงการอสังหาริมทรัพย์',
+      en: 'Property Sales & Booking Management'
+    },
+    description: {
+      th: 'ระบบบริหารการขายสำหรับโครงการคอนโดมิเนียมและบ้านจัดสรร แสดงผังห้องว่างแบบเรียลไทม์ คำนวณค่างวด สัญญาจอง และโอนกรรมสิทธิ์',
+      en: 'Sales and unit reservation management for condominiums and residential projects with real-time floor plans and installment calculators.'
+    },
+    tags: ['Unit Layout', 'Booking & Contract', 'Installment']
+  },
+  {
+    id: 'ipos',
+    iconType: 'cash-register',
+    iconBg: 'bg-[#FFE4E6] border border-[#FECDD3]',
+    iconColor: 'text-[#E11D48]',
+    tag: 'Point of Sale & Stock',
+    title: 'iPOS',
+    subtitle: {
+      th: 'ระบบบริหารการขายหน้าร้านและคลังสินค้าอัจฉริยะ',
+      en: 'Smart Retail POS & Inventory Management'
+    },
+    description: {
+      th: 'ระบบขายหน้าร้าน (Point of Sale) ที่ใช้งานง่าย รองรับการสแกนบาร์โค้ด จัดโปรโมชัน ตัดสต็อกสินค้าอัตโนมัติ และดูยอดขายได้ทุกสาขา',
+      en: 'User-friendly Point of Sale system with barcode scanning, automated stock deduction, promotional tools, and multi-branch sales analytics.'
+    },
+    tags: ['Barcode Scan', 'Multi-Branch', 'Stock Alert']
+  },
+  {
+    id: 'imme-application',
+    iconType: 'heart',
+    iconBg: 'bg-[#FCE7F3] border border-[#FBCFE8]',
+    iconColor: 'text-[#DB2777]',
+    tag: 'Wedding & Event App',
+    title: 'iMme Application',
+    subtitle: {
+      th: 'แอปพลิเคชันบันทึกงานแต่งงานและจัดการแขกผู้ร่วมงาน',
+      en: 'Wedding & Guest Experience Application'
+    },
+    description: {
+      th: 'แพลตฟอร์มดิจิทัลสำหรับคู่บ่าวสาวและออแกไนเซอร์ ช่วยบันทึกของขวัญ ซองร่วมแสดงความยินดี รายชื่อแขก และจัดการงบประมาณงานแต่ง',
+      en: 'Digital platform for couples and wedding organizers to manage guest lists, monetary blessings, gift registries, and budget plans.'
+    },
+    tags: ['Gift Registry', 'Guest List', 'Mobile App']
+  },
+  {
+    id: 'i-smartsoft',
+    iconType: 'document-case',
+    iconBg: 'bg-[#CFFAFE] border border-[#A5F3FC]',
+    iconColor: 'text-[#0891B2]',
+    tag: 'Document & Case Tracking',
+    title: 'i-SMARTSOFT',
+    subtitle: {
+      th: 'ชุดซอฟต์แวร์บริหารงานเอกสารและติดตามงานองค์กร',
+      en: 'Document Management & Workflow Tracking'
+    },
+    description: {
+      th: 'โซลูชันจัดการเอกสารดิจิทัล จัดเก็บไฟล์อย่างเป็นหมวดหมู่ กำหนดสิทธิ์การเข้าถึง และติดตามความคืบหน้าของงานในแต่ละแผนก',
+      en: 'Digital document repository with category indexing, role-based access permissions, and departmental task tracking.'
+    },
+    tags: ['Document Mgmt', 'Permission Control', 'Task Tracking']
+  },
+  {
+    id: 'software-ondemand',
+    iconType: 'code',
+    iconBg: 'bg-[#F1F5F9] border border-[#E2E8F0]',
+    iconColor: 'text-[#334155]',
+    tag: 'Custom Development',
+    title: 'Software OnDemand',
+    subtitle: {
+      th: 'บริการออกแบบและพัฒนาซอฟต์แวร์ตามความต้องการเฉพาะ',
+      en: 'Tailored Software Design & Development'
+    },
+    description: {
+      th: 'บริการพัฒนาเว็บแอปพลิเคชัน โมบายแอปพลิเคชัน และเชื่อมต่อ API ตามกระบวนการธุรกิจเฉพาะขององค์กร ภายใต้มาตรฐาน ISO/IEC 29110',
+      en: 'Custom web and mobile application engineering, system integrations, and API workflows certified under ISO/IEC 29110.'
+    },
+    tags: ['Custom Web/App', 'API Integration', 'ISO 29110']
+  },
+  {
+    id: 'outsource-service',
+    iconType: 'user-tech',
+    iconBg: 'bg-[#DCFCE7] border border-[#BBF7D0]',
+    iconColor: 'text-[#15803D]',
+    tag: 'IT Professional Team',
+    title: 'OutSource Service',
+    subtitle: {
+      th: 'บริการจัดหาบุคลากรผู้เชี่ยวชาญด้านเทคโนโลยีสารสนเทศ',
+      en: 'IT Talent Outsourcing & Professional Staffing'
+    },
+    description: {
+      th: 'บริการจัดส่งทีมนักวิเคราะห์ระบบ (SA) โปรแกรมเมอร์ (Developer) และผู้ดูแลระบบมืออาชีพ เพื่อขับเคลื่อนโครงการไอทีขององค์กร',
+      en: 'Dedicated IT staffing including System Analysts (SA), Developers, and System Administrators to drive enterprise projects.'
+    },
+    tags: ['Dedicated Team', 'SA & Developer', 'Enterprise SLA']
   }
-  return products.value.filter(p => p.categoryKey === activeCategory.value)
+]
+
+// Modal State
+const selectedDetailItem = ref<any | null>(null)
+
+const openModalForSlide = (slide: FeaturedSlide) => {
+  selectedDetailItem.value = {
+    title: slide.title[locale.value] || slide.title.th,
+    tag: slide.numberBadge,
+    subtitle: slide.awardBadge,
+    description: slide.description[locale.value] || slide.description.th,
+    features: slide.features.map(f => f[locale.value] || f.th),
+    tags: ['ISO 29110', 'Enterprise Solution', 'Sovereign Architecture']
+  }
+}
+
+const openModalForSolution = (item: SolutionCard) => {
+  selectedDetailItem.value = {
+    title: item.title,
+    tag: item.tag,
+    subtitle: item.subtitle[locale.value] || item.subtitle.th,
+    description: item.description[locale.value] || item.description.th,
+    features: [
+      item.subtitle[locale.value] || item.subtitle.th,
+      item.description[locale.value] || item.description.th
+    ],
+    tags: item.tags
+  }
+}
+
+const closeModal = () => {
+  selectedDetailItem.value = null
+}
+
+onMounted(() => {
+  startAutoPlay()
 })
 
-// Quick Launcher Click Action
-const handleSelectLauncher = (productId: string) => {
-  selectedLauncherId.value = productId
-  
-  // Ensure the card is visible by resetting category if filtered out
-  const targetProduct = products.value.find(p => p.id === productId)
-  if (targetProduct && activeCategory.value !== 'all' && targetProduct.categoryKey !== activeCategory.value) {
-    activeCategory.value = 'all'
-  }
-
-  // Smooth scroll to card
-  setTimeout(() => {
-    const el = document.getElementById(`product-card-${productId}`)
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    }
-  }, 50)
-}
-
-const handleInquireProduct = (product: ProductItem) => {
-  openDemo()
-}
-
-const openProductModal = (product: ProductItem) => {
-  selectedProduct.value = product
-}
-
-const closeProductModal = () => {
-  selectedProduct.value = null
-}
+onUnmounted(() => {
+  stopAutoPlay()
+})
 </script>
 
 <template>
-  <section id="products" class="relative z-10 py-20 sm:py-28 px-4 sm:px-6 bg-white border-t border-forestBlack/[0.06] scroll-mt-20">
+  <section id="products" class="relative z-10 py-20 sm:py-28 px-4 sm:px-6 bg-[#F8FAF9] border-t border-forestBlack/[0.06] scroll-mt-20">
     
     <!-- Background Tech Grid Lines -->
     <div class="absolute inset-0 bg-grid-dots pointer-events-none opacity-40"></div>
 
-    <div class="max-w-7xl mx-auto relative z-10">
+    <div class="max-w-7xl mx-auto relative z-10 space-y-20 sm:space-y-28">
       
       <!-- ==================================================================== -->
-      <!-- QUICK APP LAUNCHER (APPLE iOS INSPIRED • 9 ENTERPRISE SOLUTIONS)      -->
+      <!-- 1. FEATURED HIGHLIGHT CAROUSEL (ผลิตภัณฑ์ไฮไลต์ของ IGENCO)            -->
       <!-- ==================================================================== -->
-      <div class="mb-10 sm:mb-14">
+      <div>
         
-        <!-- Header Bar above Launcher -->
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-3 px-1">
-          <div class="text-[11px] sm:text-xs font-mono font-semibold tracking-wider uppercase text-mutedSlate">
-            QUICK APP LAUNCHER • 9 ENTERPRISE SOLUTIONS
+        <!-- Header Bar & Slide Controls Matching Image 1 -->
+        <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6 sm:mb-8">
+          <div>
+            <!-- Eyebrow -->
+            <div class="text-xs sm:text-[13px] font-mono font-semibold tracking-[0.2em] uppercase text-[#059669] mb-2">
+              FEATURED SOLUTIONS • PRODUCT SHOWCASE
+            </div>
+            <!-- Headline with dot -->
+            <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-forestBlack">
+              {{ locale === 'th' ? 'ผลิตภัณฑ์ไฮไลต์ของ IGENCO.' : 'Featured Highlights of IGENCO.' }}
+            </h2>
           </div>
-          <div class="text-[11px] text-mutedSlate/80 font-normal">
-            {{ locale === 'th' ? 'แตะที่ไอคอนเพื่อดูสเปกผลิตภัณฑ์ทันที' : 'Tap an icon to view product specs instantly' }}
-          </div>
-        </div>
 
-        <!-- Horizontal Squircle Apps Capsule Container -->
-        <div class="bg-white/95 rounded-[28px] p-3 sm:p-4 border border-forestBlack/[0.08] shadow-[0_4px_25px_rgba(9,20,14,0.04)] overflow-x-auto scrollbar-none">
-          <div class="flex items-center justify-between min-w-[760px] gap-2 lg:gap-3 px-1">
-            
+          <!-- Controls: [⏸ เลื่อนอัตโนมัติ] & [<] [>] Navigation -->
+          <div class="flex items-center gap-2.5 shrink-0 self-start sm:self-end">
+            <!-- Auto-slide toggle pill -->
             <button
-              v-for="app in appLaunchers"
-              :key="app.id"
               type="button"
-              @click="handleSelectLauncher(app.id)"
-              class="flex flex-col items-center justify-center p-2 sm:p-2.5 rounded-2xl transition-all duration-200 cursor-pointer group flex-1"
-              :class="selectedLauncherId === app.id
-                ? 'border border-[#38BDF8]/70 bg-sky-50/60 shadow-xs'
-                : 'border border-transparent hover:bg-forestBlack/5'"
-              :title="app.name"
+              @click="toggleAutoPlay"
+              class="px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer border shadow-2xs active:scale-95 whitespace-nowrap"
+              :class="isAutoPlay
+                ? 'bg-[#E8F8F2] border-[#B5EAD3] text-[#00875A]'
+                : 'bg-white border-forestBlack/15 text-mutedSlate hover:text-forestBlack'"
+              :title="isAutoPlay ? 'คลิกเพื่อหยุดเลื่อนอัตโนมัติ' : 'คลิกเพื่อเปิดเลื่อนอัตโนมัติ'"
             >
-              <!-- Squircle Icon Capsule -->
-              <div
-                class="w-12 h-12 sm:w-13 sm:h-13 rounded-2xl flex items-center justify-center relative shadow-sm transition-transform duration-200 group-hover:scale-105 group-active:scale-95"
-                :class="[app.iconBg, app.iconColor]"
-              >
-                <!-- Badge (NEW / AI) Top Right -->
-                <span
-                  v-if="app.badge"
-                  class="absolute -top-1.5 -right-1.5 px-1.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider ring-2 ring-white shadow-xs"
-                  :class="app.badgeColor"
-                >
-                  {{ app.badge }}
-                </span>
-
-                <!-- 1. HR.ai 2026 Icon (Users / People) -->
-                <svg v-if="app.id === 'hr-ai-platform'" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                  <circle cx="9" cy="7" r="4"/>
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                </svg>
-
-                <!-- 2. iSmartFlow Icon (Document Pen) -->
-                <svg v-else-if="app.id === 'ismartflow'" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M12 20h9"/>
-                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
-                </svg>
-
-                <!-- 3. I-SERFF Icon (Shield) -->
-                <svg v-else-if="app.id === 'iserff-enterprise'" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                  <path d="M9 12l2 2 4-4"/>
-                </svg>
-
-                <!-- 4. EFMS Suite Icon (Bank Building) -->
-                <svg v-else-if="app.id === 'efms-filing'" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="3" y1="21" x2="21" y2="21"/>
-                  <line x1="3" y1="10" x2="21" y2="10"/>
-                  <polyline points="5 10 12 3 19 10"/>
-                  <line x1="6" y1="14" x2="6" y2="18"/>
-                  <line x1="10" y1="14" x2="10" y2="18"/>
-                  <line x1="14" y1="14" x2="14" y2="18"/>
-                  <line x1="18" y1="14" x2="18" y2="18"/>
-                </svg>
-
-                <!-- 5. AI RAG Icon (Brain Network) -->
-                <svg v-else-if="app.id === 'rag-engine'" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-2.04z"/>
-                  <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-2.04z"/>
-                </svg>
-
-                <!-- 6. Agentic AI Icon (Robot) -->
-                <svg v-else-if="app.id === 'agentic-core'" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="11" width="18" height="10" rx="2"/>
-                  <circle cx="12" cy="5" r="2"/>
-                  <path d="M12 7v4"/>
-                  <line x1="8" y1="16" x2="8" y2="16"/>
-                  <line x1="16" y1="16" x2="16" y2="16"/>
-                </svg>
-
-                <!-- 7. e-Procure Icon (Document Dollar) -->
-                <svg v-else-if="app.id === 'eprocurement-pro'" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                  <polyline points="14 2 14 8 20 8"/>
-                  <line x1="12" y1="18" x2="12" y2="12"/>
-                  <path d="M10 14h3a1 1 0 0 1 1 1v0a1 1 0 0 1-1 1h-2a1 1 0 0 0-1 1v0a1 1 0 0 0 1 1h3"/>
-                </svg>
-
-                <!-- 8. AI OCR Icon (Scanner Frame) -->
-                <svg v-else-if="app.id === 'idp-ocr'" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M3 7V5a2 2 0 0 1 2-2h2"/>
-                  <path d="M17 3h2a2 2 0 0 1 2 2v2"/>
-                  <path d="M21 17v2a2 2 0 0 1-2 2h-2"/>
-                  <path d="M7 21H5a2 2 0 0 1-2-2v-2"/>
-                  <circle cx="12" cy="12" r="3"/>
-                </svg>
-
-                <!-- 9. ERP & WMS Icon (Warehouse / Forklift Boxes) -->
-                <svg v-else-if="app.id === 'smart-erp'" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-                  <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
-                  <line x1="12" y1="22.08" x2="12" y2="12"/>
-                </svg>
-              </div>
-
-              <!-- Label below icon -->
-              <span
-                class="text-[11px] font-semibold mt-2 whitespace-nowrap transition-colors"
-                :class="selectedLauncherId === app.id
-                  ? 'text-[#0284C7] font-bold'
-                  : 'text-forestBlack/80 group-hover:text-forestBlack'"
-              >
-                {{ app.name }}
-              </span>
+              <span>{{ isAutoPlay ? '⏸' : '▶' }}</span>
+              <span>{{ isAutoPlay ? (locale === 'th' ? 'เลื่อนอัตโนมัติ' : 'Auto Playing') : (locale === 'th' ? 'หยุดเลื่อน' : 'Paused') }}</span>
             </button>
 
+            <!-- Prev Arrow -->
+            <button
+              type="button"
+              @click="prevSlide"
+              class="w-9 h-9 rounded-full bg-white hover:bg-forestBlack/5 text-forestBlack border border-forestBlack/15 shadow-2xs flex items-center justify-center transition-all cursor-pointer active:scale-95"
+              :title="locale === 'th' ? 'สไลด์ก่อนหน้า' : 'Previous slide'"
+              aria-label="Previous"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+              </svg>
+            </button>
+
+            <!-- Next Arrow -->
+            <button
+              type="button"
+              @click="nextSlide"
+              class="w-9 h-9 rounded-full bg-white hover:bg-forestBlack/5 text-forestBlack border border-forestBlack/15 shadow-2xs flex items-center justify-center transition-all cursor-pointer active:scale-95"
+              :title="locale === 'th' ? 'สไลด์ถัดไป' : 'Next slide'"
+              aria-label="Next"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+              </svg>
+            </button>
           </div>
         </div>
-      </div>
 
-      <!-- ==================================================================== -->
-      <!-- SECTION HEADER & CATEGORY FILTER PILLS (MATCHING SCREENSHOT)         -->
-      <!-- ==================================================================== -->
-      <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6 sm:gap-8 mb-10 sm:mb-14">
-        
-        <!-- Left: Eyebrow + Headline + Description -->
-        <div class="max-w-2xl">
-          <!-- Eyebrow Pill -->
-          <div class="text-xs sm:text-[13px] font-mono font-semibold tracking-[0.2em] uppercase text-[#059669] mb-3">
-            ENTERPRISE PRODUCTS & SOLUTIONS
-          </div>
-
-          <!-- Headline: Line 1 Black / Line 2 Green with dot -->
-          <h2 class="text-3xl sm:text-5xl lg:text-5xl font-bold tracking-tight leading-[1.18] mb-4">
-            <template v-if="locale === 'th'">
-              <span class="text-forestBlack block">ผลิตภัณฑ์ซอฟต์แวร์และ</span>
-              <span class="text-[#00A86B] block">โซลูชันองค์กร.</span>
-            </template>
-            <template v-else>
-              <span class="text-forestBlack block">Enterprise Software &</span>
-              <span class="text-[#00A86B] block">Organization Solutions.</span>
-            </template>
-          </h2>
-
-          <!-- Description Matching Screenshot -->
-          <p class="text-xs sm:text-sm text-mutedSlate leading-relaxed">
-            {{ locale === 'th'
-              ? 'ออกแบบด้วยความประณีตระดับ iOS และวิศวกรรมซอฟต์แวร์มาตรฐานสากล ISO/IEC 29110 เพื่อตอบโจทย์หน่วยงานภาครัฐ รัฐวิสาหกิจ และองค์กรเอกชน'
-              : 'Crafted with iOS-grade finesse and ISO/IEC 29110 international software engineering standards to meet the demands of government agencies, state enterprises, and corporations.' }}
-          </p>
-        </div>
-
-        <!-- Right: Category Filter Pills Matching Image 1 & 2 -->
-        <div class="flex flex-wrap items-center gap-2 sm:gap-2.5 shrink-0">
-          <button
-            v-for="cat in categories"
-            :key="cat.key"
-            type="button"
-            @click="activeCategory = cat.key"
-            class="px-4 sm:px-4.5 py-1.5 sm:py-2 rounded-full text-xs font-semibold transition-all cursor-pointer whitespace-nowrap active:scale-95"
-            :class="activeCategory === cat.key
-              ? 'bg-[#00C978] text-forestBlack font-bold shadow-xs'
-              : 'bg-white hover:bg-forestBlack/5 text-forestBlack/80 border border-forestBlack/10'"
+        <!-- Main Featured Card Carousel (Split Content Left / Image Right) -->
+        <div
+          class="relative bg-white rounded-[32px] border border-forestBlack/[0.08] shadow-[0_12px_45px_rgba(9,20,14,0.06)] overflow-hidden transition-all duration-500"
+          @mouseenter="stopAutoPlay"
+          @mouseleave="isAutoPlay ? startAutoPlay() : null"
+        >
+          <!-- Current Active Slide -->
+          <div
+            :key="featuredSlides[currentSlideIndex].id"
+            class="grid grid-cols-1 lg:grid-cols-12 min-h-[420px] lg:min-h-[460px] animate-in fade-in duration-300"
           >
-            <span>{{ cat.name }}</span>
+            <!-- Left Half: Badges + Title + Description + Actions (6 cols) -->
+            <div class="lg:col-span-6 p-7 sm:p-10 lg:p-12 flex flex-col justify-center">
+              
+              <!-- Badges Row -->
+              <div class="flex flex-wrap items-center gap-2.5 mb-4">
+                <span class="px-3.5 py-1 rounded-full text-xs font-mono font-bold bg-[#00C978] text-forestBlack shadow-xs">
+                  {{ featuredSlides[currentSlideIndex].numberBadge }}
+                </span>
+                <span class="px-3.5 py-1 rounded-full text-xs font-semibold bg-[#FEF3C7] text-[#92400E] border border-[#FDE68A]">
+                  {{ featuredSlides[currentSlideIndex].awardBadge }}
+                </span>
+              </div>
+
+              <!-- Title -->
+              <h3 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-forestBlack leading-[1.25] mb-4">
+                {{ featuredSlides[currentSlideIndex].title[locale] || featuredSlides[currentSlideIndex].title.th }}
+              </h3>
+
+              <!-- Description -->
+              <p class="text-sm sm:text-base text-mutedSlate leading-relaxed mb-8">
+                {{ featuredSlides[currentSlideIndex].description[locale] || featuredSlides[currentSlideIndex].description.th }}
+              </p>
+
+              <!-- Action Buttons: [ดูรายละเอียด] & [ขอทดสอบระบบ ↗] -->
+              <div class="flex flex-wrap items-center gap-3 mt-auto">
+                <button
+                  type="button"
+                  @click="openModalForSlide(featuredSlides[currentSlideIndex])"
+                  class="px-5 py-2.5 rounded-full text-xs sm:text-sm font-semibold bg-white hover:bg-forestBlack/5 text-forestBlack border border-forestBlack/15 transition-all shadow-xs cursor-pointer active:scale-95"
+                >
+                  {{ locale === 'th' ? 'ดูรายละเอียด' : 'View Details' }}
+                </button>
+                <button
+                  type="button"
+                  @click="openDemo"
+                  class="px-6 py-2.5 rounded-full text-xs sm:text-sm font-bold bg-[#00C978] hover:bg-[#00B36B] text-forestBlack transition-all shadow-md hover:shadow-lg cursor-pointer flex items-center gap-2 active:scale-95"
+                >
+                  <span>{{ locale === 'th' ? 'ขอทดสอบระบบ' : 'Request Demo' }}</span>
+                  <span class="font-bold">↗</span>
+                </button>
+              </div>
+
+            </div>
+
+            <!-- Right Half: Full Bleed Photo (6 cols) -->
+            <div class="lg:col-span-6 relative h-64 sm:h-80 lg:h-auto overflow-hidden bg-forestBlack/5">
+              <img
+                :src="featuredSlides[currentSlideIndex].image"
+                :alt="featuredSlides[currentSlideIndex].title[locale] || featuredSlides[currentSlideIndex].title.th"
+                class="w-full h-full object-cover"
+                loading="eager"
+              />
+              <div class="absolute inset-0 bg-gradient-to-t lg:bg-gradient-to-r from-black/20 via-transparent to-transparent"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Carousel Pagination Dots (5 Indicators Matching Screenshot) -->
+        <div class="flex items-center justify-center gap-2 mt-6">
+          <button
+            v-for="(slide, idx) in featuredSlides"
+            :key="slide.id"
+            type="button"
+            @click="goToSlide(idx)"
+            class="transition-all duration-300 cursor-pointer p-1"
+            :title="slide.title[locale] || slide.title.th"
+          >
+            <span
+              class="block rounded-full transition-all duration-300"
+              :class="currentSlideIndex === idx
+                ? 'w-7 h-2 bg-forestBlack'
+                : 'w-2 h-2 bg-neutral-300 hover:bg-neutral-400'"
+            ></span>
           </button>
         </div>
 
       </div>
 
       <!-- ==================================================================== -->
-      <!-- 9 PRODUCTS 3-COLUMN GRID (MATCHING IMAGE 2, 3, 4)                    -->
+      <!-- 2. ALL PRODUCTS & SERVICES OF IGENCO (12 SOLUTIONS GRID)             -->
       <!-- ==================================================================== -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
+      <div>
         
-        <div
-          v-for="item in filteredProducts"
-          :id="`product-card-${item.id}`"
-          :key="item.id"
-          class="bg-white rounded-[28px] p-5 sm:p-6 shadow-[0_10px_35px_rgba(9,20,14,0.05)] hover:shadow-xl transition-all duration-300 flex flex-col group scroll-mt-28"
-          :class="selectedLauncherId === item.id
-            ? 'border-2 border-[#38BDF8] ring-4 ring-[#38BDF8]/15 shadow-xl'
-            : (item.borderColor || 'border border-forestBlack/[0.08] hover:border-emerald-500/40')"
-        >
-          <!-- Card Image Thumbnail Container with Overlays -->
-          <div class="relative h-48 sm:h-52 rounded-2xl overflow-hidden bg-forestBlack/5 mb-5 flex items-center justify-center">
-            
-            <!-- Standard Photo Image (01, 02, 04, 05, 06, 07, 08, 09) -->
-            <template v-if="item.imageType === 'photo'">
-              <img
-                :src="item.imageUrl"
-                :alt="getProductField(item, 'title')"
-                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                loading="lazy"
-              />
-              <div class="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent"></div>
-            </template>
-
-            <!-- Custom Graphic (For Card 03 - I-SERFF Enterprise Solution Graphic) -->
-            <template v-else>
-              <div class="w-full h-full bg-[#051E14] flex flex-col items-center justify-center relative p-6 select-none">
-                <!-- Glowing Outer Circle -->
-                <div class="w-32 h-32 rounded-full border border-emerald-400/20 bg-emerald-500/5 flex items-center justify-center relative">
-                  <!-- Wireframe Triangle matching Image 2 Card 03 -->
-                  <svg class="w-16 h-16 text-[#00C978]/70" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <polygon points="50,15 90,85 10,85"/>
-                  </svg>
-                </div>
-                <!-- Brand Title inside Graphic -->
-                <div class="text-[11px] font-mono font-bold tracking-widest text-[#00C978] uppercase mt-2">
-                  IGENCO ENTERPRISE SOLUTION
-                </div>
-              </div>
-            </template>
-
-            <!-- Top-Left Category Badge Inside Image -->
-            <div class="absolute top-3.5 left-3.5 px-3 py-1 rounded-full bg-forestBlack/80 backdrop-blur-xs text-white/95 text-[11px] font-medium border border-white/10">
-              {{ getProductField(item, 'categoryName') }}
-            </div>
-
-            <!-- Top-Right Number Badge Inside Image (01 - 09) -->
-            <div class="absolute top-3.5 right-3.5 px-2.5 py-1 rounded-full bg-forestBlack/80 backdrop-blur-xs text-white/95 text-[11px] font-mono font-semibold border border-white/10">
-              {{ item.number }}
-            </div>
+        <!-- Header Bar Matching Image 2 -->
+        <div class="flex items-center justify-between mb-8 pb-3 border-b border-forestBlack/[0.08]">
+          <h2 class="text-2xl sm:text-3xl font-bold text-forestBlack">
+            {{ locale === 'th' ? 'ผลิตภัณฑ์และบริการทั้งหมดของ IGENCO' : 'All Products & Services of IGENCO' }}
+          </h2>
+          <div class="text-xs sm:text-sm font-mono text-mutedSlate font-semibold">
+            12 Solutions
           </div>
+        </div>
 
-          <!-- Grade Dot & Tag (• ENTERPRISE GRADE) -->
-          <div class="flex items-center gap-1.5 text-xs font-mono font-bold tracking-wider mb-2">
-            <span
-              class="w-2 h-2 rounded-full"
-              :class="{
-                'bg-[#00C978]': item.gradeColor === 'emerald',
-                'bg-[#0284C7]': item.gradeColor === 'sky',
-                'bg-[#D97706]': item.gradeColor === 'amber'
-              }"
-            ></span>
-            <span
-              :class="{
-                'text-[#00875A]': item.gradeColor === 'emerald',
-                'text-[#0284C7]': item.gradeColor === 'sky',
-                'text-[#D97706]': item.gradeColor === 'amber'
-              }"
-            >
-              {{ item.gradeText }}
-            </span>
-          </div>
-
-          <!-- Product Title -->
-          <h3
-            class="text-lg sm:text-xl font-bold leading-snug mb-2 transition-colors cursor-pointer"
-            :class="item.titleColor || 'text-forestBlack group-hover:text-[#00875A]'"
-            @click="openProductModal(item)"
+        <!-- 12 Solutions Clean Apple Grid (3 columns x 4 rows) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
+          
+          <div
+            v-for="item in solutionsList"
+            :key="item.id"
+            class="bg-white rounded-[26px] p-6 sm:p-7 border border-forestBlack/[0.08] shadow-[0_6px_25px_rgba(9,20,14,0.03)] hover:shadow-xl hover:border-emerald-500/40 transition-all duration-300 flex flex-col group"
           >
-            {{ getProductField(item, 'title') }}
-          </h3>
+            <!-- Card Top: Squircle App Icon (Left) + Tag Badge (Right) -->
+            <div class="flex items-start justify-between gap-3 mb-5">
+              
+              <!-- Left Squircle Icon Capsule -->
+              <div
+                class="w-12 h-12 rounded-2xl flex items-center justify-center shadow-xs transition-transform duration-200 group-hover:scale-105"
+                :class="[item.iconBg, item.iconColor]"
+              >
+                <!-- 1. Document Pen (i-SMARTFLOW) -->
+                <svg v-if="item.iconType === 'document-pen'" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 20h9"/>
+                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                </svg>
 
-          <!-- Product Short Description -->
-          <p class="text-xs text-mutedSlate leading-relaxed line-clamp-3 mb-4">
-            {{ getProductField(item, 'description') }}
-          </p>
+                <!-- 2. Users (HR.ai) -->
+                <svg v-else-if="item.iconType === 'users'" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
 
-          <!-- Feature Tag Pills -->
-          <div class="flex flex-wrap items-center gap-1.5 mb-6">
-            <span
-              v-for="(tag, idx) in item.tags"
-              :key="idx"
-              class="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-[#F8FAF9] text-mutedSlate border border-forestBlack/5"
-            >
-              {{ tag }}
-            </span>
-          </div>
+                <!-- 3. Pie Chart (i-FINSOFT) -->
+                <svg v-else-if="item.iconType === 'pie-chart'" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21.21 15.89A10 10 0 1 1 8 2.83"/>
+                  <path d="M22 12A10 10 0 0 0 12 2v10z"/>
+                </svg>
 
-          <!-- Card Footer Action Bar Matching Image 2, 3, 4 -->
-          <div class="mt-auto pt-4 border-t border-forestBlack/[0.06] flex items-center justify-between gap-2">
-            
-            <!-- Left: Price / Status Label -->
-            <div class="text-xs font-semibold text-[#00875A] truncate max-w-[110px]" :title="getProductField(item, 'priceText')">
-              {{ getProductField(item, 'priceText') }}
+                <!-- 4. Target / BSC (iGenco BSC) -->
+                <svg v-else-if="item.iconType === 'target'" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <circle cx="12" cy="12" r="6"/>
+                  <circle cx="12" cy="12" r="2"/>
+                </svg>
+
+                <!-- 5. Badge ID (i-Regist) -->
+                <svg v-else-if="item.iconType === 'badge-id'" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="16" rx="2"/>
+                  <circle cx="12" cy="10" r="3"/>
+                  <path d="M7 17a5 5 0 0 1 10 0"/>
+                </svg>
+
+                <!-- 6. Graduation Cap (i-EDUCATION) -->
+                <svg v-else-if="item.iconType === 'graduation'" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                  <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+                </svg>
+
+                <!-- 7. Building (i-Real Estate) -->
+                <svg v-else-if="item.iconType === 'building'" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="4" y="2" width="16" height="20" rx="2"/>
+                  <line x1="8" y1="6" x2="8" y2="6.01"/>
+                  <line x1="12" y1="6" x2="12" y2="6.01"/>
+                  <line x1="16" y1="6" x2="16" y2="6.01"/>
+                  <line x1="8" y1="10" x2="8" y2="10.01"/>
+                  <line x1="12" y1="10" x2="12" y2="10.01"/>
+                  <line x1="16" y1="10" x2="16" y2="10.01"/>
+                  <line x1="8" y1="14" x2="8" y2="14.01"/>
+                  <line x1="12" y1="14" x2="12" y2="14.01"/>
+                  <line x1="16" y1="14" x2="16" y2="14.01"/>
+                  <path d="M10 22v-4h4v4"/>
+                </svg>
+
+                <!-- 8. Cash Register / POS (iPOS) -->
+                <svg v-else-if="item.iconType === 'cash-register'" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="11" width="18" height="10" rx="2"/>
+                  <path d="M7 11V7a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v4"/>
+                  <line x1="7" y1="15" x2="7.01" y2="15"/>
+                  <line x1="11" y1="15" x2="11.01" y2="15"/>
+                  <line x1="15" y1="15" x2="15.01" y2="15"/>
+                  <line x1="7" y1="18" x2="7.01" y2="18"/>
+                  <line x1="11" y1="18" x2="11.01" y2="18"/>
+                  <line x1="15" y1="18" x2="15.01" y2="18"/>
+                </svg>
+
+                <!-- 9. Heart (iMme Application) -->
+                <svg v-else-if="item.iconType === 'heart'" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                </svg>
+
+                <!-- 10. Document Case (i-SMARTSOFT) -->
+                <svg v-else-if="item.iconType === 'document-case'" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="7" height="9"/>
+                  <rect x="14" y="3" width="7" height="5"/>
+                  <rect x="14" y="12" width="7" height="9"/>
+                  <rect x="3" y="16" width="7" height="5"/>
+                </svg>
+
+                <!-- 11. Code Brackets (Software OnDemand) -->
+                <svg v-else-if="item.iconType === 'code'" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="16 18 22 12 16 6"/>
+                  <polyline points="8 6 2 12 8 18"/>
+                </svg>
+
+                <!-- 12. IT Professional (OutSource Service) -->
+                <svg v-else class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+              </div>
+
+              <!-- Right Pill Tag -->
+              <span class="px-3 py-1 rounded-full text-[11px] font-mono font-medium text-mutedSlate bg-[#F8FAF9] border border-forestBlack/10">
+                {{ item.tag }}
+              </span>
             </div>
 
-            <!-- Right Buttons: [ℹ ดูรายละเอียด] & [สอบถามสินค้านี้ ↗] -->
-            <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
-              
-              <!-- View Details Button -->
+            <!-- Title -->
+            <h3 class="text-lg sm:text-xl font-bold text-forestBlack mb-1 group-hover:text-[#00875A] transition-colors">
+              {{ item.title }}
+            </h3>
+
+            <!-- Subtitle in green font -->
+            <h4 class="text-xs font-semibold text-[#00875A] mb-3 leading-normal">
+              {{ item.subtitle[locale] || item.subtitle.th }}
+            </h4>
+
+            <!-- Description -->
+            <p class="text-xs text-mutedSlate leading-relaxed line-clamp-3 mb-5">
+              {{ item.description[locale] || item.description.th }}
+            </p>
+
+            <!-- Tags -->
+            <div class="flex flex-wrap items-center gap-1.5 mb-6">
+              <span
+                v-for="(t, idx) in item.tags"
+                :key="idx"
+                class="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-[#F8FAF9] text-mutedSlate border border-forestBlack/5"
+              >
+                {{ t }}
+              </span>
+            </div>
+
+            <!-- Action Buttons: [ดูรายละเอียด] (Left) | [สอบถาม ↗] (Right) -->
+            <div class="mt-auto pt-4 border-t border-forestBlack/[0.06] flex items-center justify-between gap-3">
               <button
                 type="button"
-                @click="openProductModal(item)"
-                class="px-3 py-1.5 rounded-full text-xs font-medium text-forestBlack/80 hover:text-forestBlack bg-white hover:bg-forestBlack/5 border border-forestBlack/15 transition-all flex items-center gap-1 cursor-pointer active:scale-95 whitespace-nowrap"
-                :title="locale === 'th' ? 'ดูรายละเอียดผลิตภัณฑ์' : 'View product details'"
+                @click="openModalForSolution(item)"
+                class="px-4 py-2 rounded-full text-xs font-semibold bg-white hover:bg-forestBlack/5 text-forestBlack border border-forestBlack/15 transition-all shadow-xs cursor-pointer active:scale-95"
               >
-                <span class="text-[11px] text-mutedSlate">🛈</span>
-                <span>{{ locale === 'th' ? 'ดูรายละเอียด' : 'Details' }}</span>
+                {{ locale === 'th' ? 'ดูรายละเอียด' : 'Details' }}
               </button>
 
-              <!-- Inquire Product Button -->
               <button
                 type="button"
-                @click="handleInquireProduct(item)"
-                class="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-forestBlack hover:bg-[#00C978] text-white hover:text-forestBlack transition-all shadow-sm flex items-center gap-1 cursor-pointer active:scale-95 whitespace-nowrap"
-                :title="locale === 'th' ? 'สอบถามสินค้านี้กับทีมงาน' : 'Inquire about this product'"
+                @click="openDemo"
+                class="px-5 py-2 rounded-full text-xs font-semibold bg-forestBlack hover:bg-[#00C978] text-white hover:text-forestBlack transition-all shadow-sm flex items-center gap-1 cursor-pointer active:scale-95 whitespace-nowrap"
               >
-                <span>{{ locale === 'th' ? 'สอบถามสินค้านี้' : 'Inquire' }}</span>
-                <span class="text-xs text-[#00C978] group-hover:text-forestBlack">↗</span>
+                <span>{{ locale === 'th' ? 'สอบถาม' : 'Inquire' }}</span>
+                <span class="text-xs">↗</span>
               </button>
             </div>
 
@@ -798,51 +765,52 @@ const closeProductModal = () => {
     </div>
 
     <!-- ==================================================================== -->
-    <!-- PRODUCT DETAIL MODAL (เมื่อคลิก "🛈 ดูรายละเอียด")                      -->
+    <!-- DETAIL MODAL                                                         -->
     <!-- ==================================================================== -->
     <div
-      v-if="selectedProduct"
+      v-if="selectedDetailItem"
       class="fixed inset-0 z-50 bg-forestBlack/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
-      @click.self="closeProductModal"
+      @click.self="closeModal"
     >
       <div class="w-full max-w-2xl bg-white rounded-3xl p-6 sm:p-8 border border-forestBlack/10 shadow-2xl relative my-8 animate-in fade-in zoom-in-95 duration-200">
         
         <!-- Close Button -->
         <button
-          @click="closeProductModal"
+          @click="closeModal"
           class="absolute top-6 right-6 w-9 h-9 rounded-full bg-forestBlack/5 hover:bg-forestBlack/10 text-mutedSlate hover:text-forestBlack flex items-center justify-center cursor-pointer transition-colors"
           aria-label="Close"
         >
           ✕
         </button>
 
-        <!-- Badge & Number -->
-        <div class="flex items-center gap-2.5 mb-2">
+        <!-- Badge -->
+        <div class="flex items-center gap-2 mb-2">
           <span class="px-3 py-0.5 rounded-full text-xs font-mono font-bold bg-[#E8F8F2] text-[#00875A] border border-[#B5EAD3]">
-            {{ getProductField(selectedProduct, 'categoryName') }}
-          </span>
-          <span class="text-xs font-mono text-mutedSlate font-semibold">
-            No. {{ selectedProduct.number }}
+            {{ selectedDetailItem.tag }}
           </span>
         </div>
 
-        <h2 class="text-2xl sm:text-3xl font-bold text-forestBlack mb-3 leading-snug">
-          {{ getProductField(selectedProduct, 'title') }}
+        <h2 class="text-2xl sm:text-3xl font-bold text-forestBlack mb-1 leading-snug">
+          {{ selectedDetailItem.title }}
         </h2>
+
+        <p class="text-xs font-semibold text-[#00875A] mb-4">
+          {{ selectedDetailItem.subtitle }}
+        </p>
 
         <!-- Description -->
         <p class="text-xs sm:text-sm text-forestBlack/80 leading-relaxed mb-5">
-          {{ getProductField(selectedProduct, 'fullDescription') || getProductField(selectedProduct, 'description') }}
+          {{ selectedDetailItem.description }}
         </p>
 
-        <!-- Key Features List -->
-        <div v-if="getProductFeatures(selectedProduct).length > 0" class="mb-6 p-4 rounded-2xl bg-[#F8FAF9] border border-forestBlack/5">
+        <!-- Features list if any -->
+        <div v-if="selectedDetailItem.features && selectedDetailItem.features.length > 0" class="mb-6 p-4 rounded-2xl bg-[#F8FAF9] border border-forestBlack/5">
           <h4 class="font-bold text-xs text-forestBlack mb-2.5 flex items-center gap-2">
             <span class="w-1.5 h-3.5 rounded-full bg-[#00C978]"></span>
-            <span>{{ locale === 'th' ? 'จุดเด่นและคุณสมบัติสำคัญ (Key Capabilities):' : 'Key Capabilities & Features:' }}</span>
+            <span>{{ locale === 'th' ? 'จุดเด่นและคุณสมบัติสำคัญ:' : 'Key Capabilities & Features:' }}</span>
           </h4>
           <ul class="space-y-2 text-xs text-mutedSlate">
-            <li v-for="(feat, i) in getProductFeatures(selectedProduct)" :key="i" class="flex items-start gap-2">
+            <li v-for="(feat, i) in selectedDetailItem.features" :key="i" class="flex items-start gap-2">
               <span class="text-[#00C978] font-bold">✓</span>
               <span>{{ feat }}</span>
             </li>
@@ -852,7 +820,7 @@ const closeProductModal = () => {
         <!-- Tags -->
         <div class="flex flex-wrap items-center gap-1.5 mb-6">
           <span
-            v-for="(t, idx) in selectedProduct.tags"
+            v-for="(t, idx) in selectedDetailItem.tags"
             :key="idx"
             class="px-2.5 py-1 rounded-lg text-xs font-medium bg-[#F8FAF9] text-forestBlack/80 border border-forestBlack/10"
           >
@@ -860,28 +828,21 @@ const closeProductModal = () => {
           </span>
         </div>
 
-        <!-- Price & Action Footer -->
-        <div class="pt-4 border-t border-forestBlack/10 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div>
-            <div class="text-[11px] text-mutedSlate">{{ locale === 'th' ? 'ประมาณการราคาเบื้องต้น:' : 'Estimated Pricing:' }}</div>
-            <div class="text-sm font-bold text-[#00875A]">{{ getProductField(selectedProduct, 'priceText') }}</div>
-          </div>
-
-          <div class="flex items-center gap-2.5 w-full sm:w-auto">
-            <button
-              @click="closeProductModal"
-              class="flex-1 sm:flex-none px-5 py-2.5 rounded-full text-xs font-semibold bg-[#F8FAF9] text-forestBlack border border-forestBlack/10 hover:bg-forestBlack/5 transition-colors cursor-pointer"
-            >
-              {{ locale === 'th' ? 'ปิด' : 'Close' }}
-            </button>
-            <button
-              @click="closeProductModal(); openDemo()"
-              class="flex-1 sm:flex-none px-6 py-2.5 rounded-full text-xs font-semibold bg-[#00C978] hover:bg-[#00B36B] text-forestBlack transition-all shadow-md cursor-pointer flex items-center justify-center gap-1.5"
-            >
-              <span>{{ locale === 'th' ? 'ขอใบเสนอราคา / นัดหมายสาธิต' : 'Request Proposal / Schedule Demo' }}</span>
-              <span>→</span>
-            </button>
-          </div>
+        <!-- Action Footer -->
+        <div class="pt-4 border-t border-forestBlack/10 flex items-center justify-end gap-3">
+          <button
+            @click="closeModal"
+            class="px-5 py-2.5 rounded-full text-xs font-semibold bg-[#F8FAF9] text-forestBlack border border-forestBlack/10 hover:bg-forestBlack/5 transition-colors cursor-pointer"
+          >
+            {{ locale === 'th' ? 'ปิด' : 'Close' }}
+          </button>
+          <button
+            @click="closeModal(); openDemo()"
+            class="px-6 py-2.5 rounded-full text-xs font-semibold bg-[#00C978] hover:bg-[#00B36B] text-forestBlack transition-all shadow-md cursor-pointer flex items-center gap-1.5"
+          >
+            <span>{{ locale === 'th' ? 'ขอใบเสนอราคา / นัดสาธิต' : 'Request Demo' }}</span>
+            <span>→</span>
+          </button>
         </div>
 
       </div>
