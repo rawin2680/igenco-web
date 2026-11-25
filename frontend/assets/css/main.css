@@ -18,7 +18,7 @@
 body {
   background-color: var(--bg-canvas);
   color: var(--ink-primary);
-  font-family: 'Plus Jakarta Sans', 'Inter', 'IBM Plex Sans Thai', sans-serif;
+  font-family: 'IBM Plex Sans Thai', 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
