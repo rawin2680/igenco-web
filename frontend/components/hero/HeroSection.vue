@@ -74,7 +74,7 @@ const { openAbout, openDemo, openChat } = useAppModal()
               @click="openAbout"
               class="px-4 py-2 rounded-xl text-xs font-semibold bg-[#059669] hover:bg-[#047857] text-white flex items-center gap-1.5 transition-all shadow-sm active:scale-95 cursor-pointer"
             >
-              <span>About Us</span>
+              <span>{{ locale === 'th' ? 'เกี่ยวกับเรา' : 'About Us' }}</span>
               <span>→</span>
             </button>
             <button
@@ -82,7 +82,7 @@ const { openAbout, openDemo, openChat } = useAppModal()
               @click="openDemo"
               class="px-4 py-2 rounded-xl text-xs font-semibold bg-white hover:bg-forestBlack/5 text-forestBlack border border-forestBlack/15 transition-all active:scale-95 cursor-pointer"
             >
-              Consult
+              {{ locale === 'th' ? 'ปรึกษาเรา' : 'Consult' }}
             </button>
           </div>
         </div>
@@ -114,9 +114,9 @@ const { openAbout, openDemo, openChat } = useAppModal()
             type="button"
             @click="openAbout"
             class="px-4 py-2 rounded-xl text-xs font-semibold bg-[#059669] hover:bg-[#047857] text-white flex items-center gap-1.5 transition-all shadow-sm hover:shadow active:scale-95 cursor-pointer"
-            title="เกี่ยวกับบริษัท ไอเจนโก้ จำกัด"
+            :title="locale === 'th' ? 'เกี่ยวกับบริษัท ไอเจนโก้ จำกัด' : 'About IGENCO Co., Ltd.'"
           >
-            <span>About Us</span>
+            <span>{{ locale === 'th' ? 'เกี่ยวกับเรา' : 'About Us' }}</span>
             <span>→</span>
           </button>
           
@@ -125,9 +125,9 @@ const { openAbout, openDemo, openChat } = useAppModal()
             type="button"
             @click="openChat"
             class="px-4 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-[#13281E] hover:bg-forestBlack/5 dark:hover:bg-[#1A382A] text-forestBlack dark:text-white border border-forestBlack/15 dark:border-[#00C978]/30 transition-all hover:border-emerald-500/40 active:scale-95 cursor-pointer"
-            title="ปรึกษาทีมงาน IGENCO AI"
+            :title="locale === 'th' ? 'ปรึกษาทีมงาน IGENCO AI' : 'Consult with IGENCO AI Team'"
           >
-            Consult
+            {{ locale === 'th' ? 'ปรึกษาเรา' : 'Consult' }}
           </button>
         </div>
       </div>

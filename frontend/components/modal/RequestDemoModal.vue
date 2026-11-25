@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useAppModal } from '~/composables/useModal'
+import { useAppI18n } from '~/composables/useI18n'
 import { useStrapiApi } from '~/composables/useStrapiApi'
 import type { DemoLeadForm } from '~/types/cms'
 
 const { isDemoModalOpen, closeDemo } = useAppModal()
+const { locale } = useAppI18n()
 const { submitDemoLead } = useStrapiApi()
 
 const form = ref<DemoLeadForm>({
@@ -30,7 +32,7 @@ const handleSubmit = async () => {
       errorMessage.value = res.message
     }
   } catch (err: any) {
-    errorMessage.value = err.message || 'เกิดข้อผิดพลาดในการส่งข้อมูล'
+    errorMessage.value = err.message || (locale.value === 'th' ? 'เกิดข้อผิดพลาดในการส่งข้อมูล' : 'Failed to submit form')
   } finally {
     isSubmitting.value = false
   }
@@ -60,6 +62,8 @@ const resetAndClose = () => {
       <button
         @click="resetAndClose"
         class="absolute top-6 right-6 text-mutedSlate hover:text-forestBlack cursor-pointer p-1"
+        :title="locale === 'th' ? 'ปิด' : 'Close'"
+        aria-label="Close"
       >
         ✕
       </button>
@@ -69,10 +73,12 @@ const resetAndClose = () => {
       </div>
       
       <h3 class="text-2xl font-semibold text-forestBlack mb-2">
-        นัดหมายสาธิตเทคโนโลยี AI
+        {{ locale === 'th' ? 'นัดหมายสาธิตเทคโนโลยี AI & ปรึกษาผู้เชี่ยวชาญ' : 'Request Enterprise Demo & AI Consultation' }}
       </h3>
       <p class="text-xs text-mutedSlate mb-6">
-        ทีมวิศวกร AI ของเราจะติดต่อกลับภายใน 24 ชั่วโมงพร้อมแนวทางที่ออกแบบเพื่อองค์กรของคุณ
+        {{ locale === 'th'
+          ? 'ทีมวิศวกรซอฟต์แวร์ของ IGENCO จะติดต่อกลับภายใน 24 ชั่วโมงพร้อมข้อเสนอที่เหมาะกับองค์กรของคุณ'
+          : 'Our enterprise software team will reach out within 24 hours with tailored solutions.' }}
       </p>
 
       <!-- Form -->
@@ -86,7 +92,7 @@ const resetAndClose = () => {
             v-model="form.fullName"
             required
             type="text"
-            placeholder="ชื่อ - นามสกุล"
+            :placeholder="locale === 'th' ? 'ชื่อ - นามสกุล' : 'Full Name'"
             class="w-full px-4 py-3 rounded-xl bg-[#F7F9F8] border border-forestBlack/10 text-sm text-forestBlack placeholder-mutedSlate focus:outline-none focus:border-emeraldCore"
           />
         </div>
@@ -96,7 +102,7 @@ const resetAndClose = () => {
             v-model="form.workEmail"
             required
             type="email"
-            placeholder="อีเมลองค์กร (Work Email)"
+            :placeholder="locale === 'th' ? 'อีเมลองค์กร (Work Email)' : 'Corporate Work Email'"
             class="w-full px-4 py-3 rounded-xl bg-[#F7F9F8] border border-forestBlack/10 text-sm text-forestBlack placeholder-mutedSlate focus:outline-none focus:border-emeraldCore"
           />
         </div>
@@ -106,7 +112,7 @@ const resetAndClose = () => {
             v-model="form.companyName"
             required
             type="text"
-            placeholder="ชื่อบริษัท / องค์กร"
+            :placeholder="locale === 'th' ? 'ชื่อบริษัท / องค์กร' : 'Company / Organization Name'"
             class="w-full px-4 py-3 rounded-xl bg-[#F7F9F8] border border-forestBlack/10 text-sm text-forestBlack placeholder-mutedSlate focus:outline-none focus:border-emeraldCore"
           />
         </div>
@@ -116,12 +122,12 @@ const resetAndClose = () => {
             v-model="form.industry"
             class="w-full px-4 py-3 rounded-xl bg-[#F7F9F8] border border-forestBlack/10 text-sm text-forestBlack focus:outline-none focus:border-emeraldCore"
           >
-            <option value="Manufacturing">Manufacturing & Industrial</option>
-            <option value="Finance">Banking & Financial Services</option>
-            <option value="Healthcare">Healthcare & BioTech</option>
-            <option value="Retail">Retail & E-Commerce</option>
-            <option value="Energy">Energy & Infrastructure</option>
-            <option value="Other">Other Enterprise Sector</option>
+            <option value="Manufacturing">{{ locale === 'th' ? 'อุตสาหกรรมการผลิต (Manufacturing)' : 'Manufacturing & Industrial' }}</option>
+            <option value="Finance">{{ locale === 'th' ? 'การเงินและประกันภัย (Finance & Insurance)' : 'Banking, Finance & Insurance' }}</option>
+            <option value="Healthcare">{{ locale === 'th' ? 'การแพทย์และสาธารณสุข (Healthcare)' : 'Healthcare & Medical' }}</option>
+            <option value="Retail">{{ locale === 'th' ? 'ค้าปลีกและอีคอมเมิร์ซ (Retail & E-Commerce)' : 'Retail & E-Commerce' }}</option>
+            <option value="Energy">{{ locale === 'th' ? 'พลังงานและสาธารณูปโภค (Energy & Infrastructure)' : 'Energy & Infrastructure' }}</option>
+            <option value="Other">{{ locale === 'th' ? 'ธุรกิจองค์กรอื่นๆ (Other Enterprise Sector)' : 'Other Enterprise Sector' }}</option>
           </select>
         </div>
 
@@ -134,8 +140,8 @@ const resetAndClose = () => {
           :disabled="isSubmitting"
           class="w-full py-3.5 rounded-xl text-sm font-semibold bg-forestBlack text-white hover:bg-emeraldCore transition-all shadow-md cursor-pointer disabled:opacity-50"
         >
-          <span v-if="!isSubmitting">ยืนยันการนัดหมาย</span>
-          <span v-else>กำลังส่งข้อมูล...</span>
+          <span v-if="!isSubmitting">{{ locale === 'th' ? 'ยืนยันการนัดหมาย' : 'Confirm Request' }}</span>
+          <span v-else>{{ locale === 'th' ? 'กำลังส่งข้อมูล...' : 'Submitting...' }}</span>
         </button>
       </form>
 
@@ -145,16 +151,18 @@ const resetAndClose = () => {
           ✓
         </div>
         <div class="text-lg font-semibold text-forestBlack">
-          ได้รับข้อมูลเรียบร้อยแล้ว
+          {{ locale === 'th' ? 'ได้รับข้อมูลเรียบร้อยแล้ว' : 'Request Submitted Successfully' }}
         </div>
         <p class="text-xs text-mutedSlate leading-relaxed">
-          ทีมผู้เชี่ยวชาญของ IGENCO AI จะติดต่อกลับไปยัง {{ form.workEmail }} โดยเร็วที่สุด
+          {{ locale === 'th'
+            ? `ทีมผู้เชี่ยวชาญของ IGENCO AI จะติดต่อกลับไปยัง ${form.workEmail} โดยเร็วที่สุด`
+            : `Our enterprise solutions team will contact you at ${form.workEmail} shortly.` }}
         </p>
         <button
           @click="resetAndClose"
           class="mt-4 px-6 py-2.5 rounded-full text-xs font-semibold bg-[#F7F9F8] hover:bg-emerald-50 text-forestBlack border border-forestBlack/10 transition-colors cursor-pointer"
         >
-          ปิดหน้าต่าง
+          {{ locale === 'th' ? 'ปิดหน้าต่าง' : 'Close' }}
         </button>
       </div>
 

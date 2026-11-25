@@ -62,7 +62,9 @@ const scrollToSection = (id: string) => {
             </div>
             <div class="flex items-center gap-2.5">
               <span class="w-5 h-5 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-[#00C978] text-[10px]">📍</span>
-              <span class="text-neutral-400">เขตดอนเมือง กรุงเทพมหานคร 10210</span>
+              <span class="text-neutral-400">
+                {{ locale === 'th' ? 'เขตดอนเมือง กรุงเทพมหานคร 10210' : 'Don Mueang, Bangkok 10210, Thailand' }}
+              </span>
             </div>
           </div>
 
@@ -76,32 +78,32 @@ const scrollToSection = (id: string) => {
           <ul class="space-y-2.5 text-xs text-neutral-300">
             <li>
               <a href="#hero" @click.prevent="scrollToSection('hero')" class="hover:text-[#00C978] transition-colors flex items-center gap-1.5 cursor-pointer">
-                <span>หน้าแรก</span>
+                <span>{{ locale === 'th' ? 'หน้าแรก' : 'Home' }}</span>
               </a>
             </li>
             <li>
               <a href="#news" @click.prevent="scrollToSection('news')" class="hover:text-[#00C978] transition-colors flex items-center gap-1.5 cursor-pointer">
-                <span>ข่าวสาร</span>
+                <span>{{ locale === 'th' ? 'ข่าวสาร' : 'News' }}</span>
               </a>
             </li>
             <li>
               <button type="button" @click="openAbout" class="hover:text-[#00C978] transition-colors cursor-pointer text-left">
-                <span>เกี่ยวกับเรา</span>
+                <span>{{ locale === 'th' ? 'เกี่ยวกับเรา' : 'About Us' }}</span>
               </button>
             </li>
             <li>
               <a href="#products" @click.prevent="scrollToSection('products')" class="hover:text-[#00C978] transition-colors flex items-center gap-1.5 cursor-pointer">
-                <span>ผลิตภัณฑ์</span>
+                <span>{{ locale === 'th' ? 'ผลิตภัณฑ์' : 'Products' }}</span>
               </a>
             </li>
             <li>
               <a href="#clients" @click.prevent="scrollToSection('clients')" class="text-[#00E588] hover:underline transition-colors cursor-pointer flex items-center gap-1.5 font-medium">
-                <span>กลุ่มผู้ใช้ผลิตภัณฑ์</span>
+                <span>{{ locale === 'th' ? 'กลุ่มผู้ใช้ผลิตภัณฑ์' : 'User Groups' }}</span>
               </a>
             </li>
             <li>
               <a href="#contact" @click.prevent="scrollToSection('contact')" class="hover:text-[#00C978] transition-colors flex items-center gap-1.5 cursor-pointer">
-                <span>ติดต่อเรา</span>
+                <span>{{ locale === 'th' ? 'ติดต่อเรา' : 'Contact Us' }}</span>
               </a>
             </li>
           </ul>

@@ -150,6 +150,88 @@ const clientsData: ClientPartnerItem[] = [
 ]
 
 // Filtered cards
+const enClientTranslations: Record<string, { categoryName?: string; title?: string; subtitle?: string; description?: string; solution?: string; stats?: string }> = {
+  oic: {
+    categoryName: 'Government & Regulators',
+    title: 'Office of Insurance Commission (OIC)',
+    subtitle: 'I-SERFF Insurance Filing System',
+    description: 'Nationwide electronic policy filing and regulatory compliance submission gateway connecting all Thai insurance carriers.',
+    solution: 'I-SERFF Enterprise Gateway',
+    stats: '100% Nationwide Insurance Coverage'
+  },
+  dpa: {
+    categoryName: 'Government & Regulators',
+    title: 'Deposit Protection Agency (DPA)',
+    subtitle: 'EFMS Electronic Data Exchange',
+    description: 'Secure electronic data filing and reconciliation infrastructure between the Deposit Protection Agency and member financial institutions.',
+    solution: 'Electronic Financial Management Gateway',
+    stats: 'Connecting all commercial bank members'
+  },
+  'insurance-group': {
+    categoryName: 'Private Sector & Insurance',
+    title: 'Leading Insurance Groups',
+    subtitle: 'Users of I-SERFF & HR.ai',
+    description: 'Implemented automated I-SERFF data connectors and smart HR.ai human capital management for insurance enterprises.',
+    solution: 'I-SERFF Connector & HR.ai Platform',
+    stats: '70% reduction in paper processing time'
+  },
+  'tuv-nord': {
+    categoryName: 'Technology Partners',
+    title: 'TÜV NORD Thailand',
+    subtitle: 'ISO/IEC 29110 Certified',
+    description: 'Certified under international software engineering standard ISO/IEC 29110:2011 covering project management and software implementation.',
+    solution: 'Software Engineering Assurance',
+    stats: 'International ISO/IEC 29110 Standard'
+  },
+  depa: {
+    categoryName: 'Technology Partners',
+    title: 'depa Thailand',
+    subtitle: 'Digital Ecosystem Partner',
+    description: 'Partnering to advance Thai software industry standards and accelerate enterprise digital transformation in the digital economy.',
+    solution: 'Digital Economy Promotion Partnership',
+    stats: 'Digital Ecosystem Network Partner'
+  },
+  nvidia: {
+    categoryName: 'Technology Partners',
+    title: 'NVIDIA AI Inception',
+    subtitle: 'AI Computing Partner',
+    description: 'High-performance AI compute infrastructure powering Enterprise AI models and autonomous analytics pipelines.',
+    solution: 'GPU Accelerated AI Compute',
+    stats: 'High-Throughput Enterprise AI'
+  },
+  'cloud-partners': {
+    categoryName: 'Technology Partners',
+    title: 'AWS & Oracle Cloud',
+    subtitle: 'Cloud & Enterprise Database',
+    description: 'Mission-critical enterprise cloud architecture and database hosting ensuring high security and resilient uptime.',
+    solution: 'Enterprise Cloud Architecture',
+    stats: '99.99% Enterprise Uptime'
+  },
+  'hospital-group': {
+    categoryName: 'Private Sector & Insurance',
+    title: 'Private Enterprises & Hospitals',
+    subtitle: 'Users of iSmartFlow & iGenQ',
+    description: 'Elevated reception workflows with iGenQ Smart Queuing and reduced paper usage with iSmartFlow electronic document management.',
+    solution: 'iSmartFlow & iGenQ Queuing System',
+    stats: '40% reduction in average wait times'
+  },
+  'soe-group': {
+    categoryName: 'Government & Regulators',
+    title: 'State-Owned Enterprises',
+    subtitle: 'HR Management & Enterprise ERP',
+    description: 'Enterprise resource planning and human capital management linking cross-departmental operations and central Data Lake.',
+    solution: 'ERP & Centralized Enterprise Data Lake',
+    stats: 'Supporting 10,000+ enterprise users'
+  }
+}
+
+const getClientField = (client: ClientPartnerItem, field: 'categoryName' | 'title' | 'subtitle' | 'description' | 'solution' | 'stats'): string => {
+  if (locale.value === 'en' && enClientTranslations[client.id] && enClientTranslations[client.id][field]) {
+    return enClientTranslations[client.id][field] as string
+  }
+  return (client as any)[field] || ''
+}
+
 const filteredClients = computed(() => {
   if (activeCategory.value === 'all') return clientsData
   return clientsData.filter(c => c.categoryKey === activeCategory.value)
@@ -196,13 +278,13 @@ const closeClientDetail = () => {
           <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 dark:bg-[#0E2C1E] border border-emerald-200 dark:border-[#00C978]/40 mb-3 shadow-xs">
             <span class="w-2 h-2 rounded-full bg-[#00C978] animate-pulse"></span>
             <span class="text-[11px] sm:text-xs font-mono font-bold tracking-wider text-[#00875A] dark:text-[#00E588] uppercase">
-              TRUSTED ECOSYSTEM // กลุ่มผู้ใช้ผลิตภัณฑ์และพันธมิตร
+              TRUSTED ECOSYSTEM // {{ locale === 'th' ? 'กลุ่มผู้ใช้ผลิตภัณฑ์และพันธมิตร' : 'Clients & Strategic Partners' }}
             </span>
           </div>
 
           <!-- Main Heading -->
           <h2 class="text-2xl sm:text-4xl lg:text-[42px] font-black tracking-tight text-forestBlack dark:text-white leading-[1.2]">
-            กลุ่มผู้ใช้ผลิตภัณฑ์และพันธมิตรที่ให้ความไว้วางใจ IGENCO
+            {{ locale === 'th' ? 'กลุ่มผู้ใช้ผลิตภัณฑ์และพันธมิตรที่ให้ความไว้วางใจ IGENCO' : 'Trusted by Regulators, Financial Institutions & Enterprises' }}
           </h2>
         </div>
 
@@ -216,7 +298,7 @@ const closeClientDetail = () => {
               ? 'bg-forestBlack dark:bg-[#00C978] text-white dark:text-forestBlack font-bold shadow-xs'
               : 'text-mutedSlate dark:text-neutral-400 hover:text-forestBlack dark:hover:text-white'"
           >
-            ความเร็วปกติ
+            {{ locale === 'th' ? 'ความเร็วปกติ' : 'Normal (1x)' }}
           </button>
           <button
             type="button"
@@ -226,7 +308,7 @@ const closeClientDetail = () => {
               ? 'bg-forestBlack dark:bg-[#00C978] text-white dark:text-forestBlack font-bold shadow-xs'
               : 'text-mutedSlate dark:text-neutral-400 hover:text-forestBlack dark:hover:text-white'"
           >
-            ความเร็วสูง (2x)
+            {{ locale === 'th' ? 'ความเร็วสูง (2x)' : 'High Speed (2x)' }}
           </button>
         </div>
       </div>
@@ -272,10 +354,10 @@ const closeClientDetail = () => {
               <!-- Text Details -->
               <div class="overflow-hidden">
                 <div class="text-[13px] font-bold text-forestBlack dark:text-white truncate group-hover:text-emeraldCore dark:group-hover:text-[#00E588] transition-colors">
-                  {{ item.title }}
+                  {{ getClientField(item, 'title') }}
                 </div>
                 <div class="text-[11px] text-mutedSlate dark:text-neutral-400 truncate">
-                  {{ item.subtitle }}
+                  {{ getClientField(item, 'subtitle') }}
                 </div>
               </div>
             </div>
@@ -311,10 +393,10 @@ const closeClientDetail = () => {
 
               <div class="overflow-hidden">
                 <div class="text-[13px] font-bold text-forestBlack dark:text-white truncate group-hover:text-emeraldCore dark:group-hover:text-[#00E588] transition-colors">
-                  {{ item.title }}
+                  {{ getClientField(item, 'title') }}
                 </div>
                 <div class="text-[11px] text-mutedSlate dark:text-neutral-400 truncate">
-                  {{ item.subtitle }}
+                  {{ getClientField(item, 'subtitle') }}
                 </div>
               </div>
             </div>
@@ -323,7 +405,7 @@ const closeClientDetail = () => {
 
         <!-- Instructional caption below ticker (Matches Screenshot 1) -->
         <p class="text-xs text-mutedSlate dark:text-neutral-400 text-center pt-2">
-          • วางเมาส์เหนือการ์ดเพื่อหยุดเลื่อนชั่วคราว หรือคลิกที่การ์ดเพื่อดูรายละเอียดโครงการ
+          {{ locale === 'th' ? '• วางเมาส์เหนือการ์ดเพื่อหยุดเลื่อนชั่วคราว หรือคลิกที่การ์ดเพื่อดูรายละเอียดโครงการ' : '• Hover over any card to pause stream, or click to view project details' }}
         </p>
       </div>
 
@@ -337,7 +419,7 @@ const closeClientDetail = () => {
               FEATURED CASE STUDIES
             </span>
             <h3 class="text-xl sm:text-2xl font-bold text-forestBlack dark:text-white">
-              โครงการสำคัญระดับประเทศและพันธมิตรเชิงกลยุทธ์
+              {{ locale === 'th' ? 'โครงการสำคัญระดับประเทศและพันธมิตรเชิงกลยุทธ์' : 'Flagship Enterprise Deployments & Strategic Alliances' }}
             </h3>
           </div>
 
@@ -351,7 +433,7 @@ const closeClientDetail = () => {
                 ? 'bg-emerald-500 text-white font-bold shadow-xs'
                 : 'text-mutedSlate dark:text-neutral-400 hover:text-forestBlack dark:hover:text-white'"
             >
-              ทั้งหมด ({{ clientsData.length }})
+              {{ locale === 'th' ? 'ทั้งหมด' : 'All' }} ({{ clientsData.length }})
             </button>
             <button
               type="button"
@@ -361,7 +443,7 @@ const closeClientDetail = () => {
                 ? 'bg-emerald-500 text-white font-bold shadow-xs'
                 : 'text-mutedSlate dark:text-neutral-400 hover:text-forestBlack dark:hover:text-white'"
             >
-              ภาครัฐและกำกับดูแล
+              {{ locale === 'th' ? 'ภาครัฐและกำกับดูแล' : 'Government & Regulators' }}
             </button>
             <button
               type="button"
@@ -371,7 +453,7 @@ const closeClientDetail = () => {
                 ? 'bg-emerald-500 text-white font-bold shadow-xs'
                 : 'text-mutedSlate dark:text-neutral-400 hover:text-forestBlack dark:hover:text-white'"
             >
-              ภาคเอกชนและประกันภัย
+              {{ locale === 'th' ? 'ภาคเอกชนและประกันภัย' : 'Private & Insurance' }}
             </button>
             <button
               type="button"
@@ -381,7 +463,7 @@ const closeClientDetail = () => {
                 ? 'bg-emerald-500 text-white font-bold shadow-xs'
                 : 'text-mutedSlate dark:text-neutral-400 hover:text-forestBlack dark:hover:text-white'"
             >
-              พันธมิตรเทคโนโลยี
+              {{ locale === 'th' ? 'พันธมิตรเทคโนโลยี' : 'Tech Partners' }}
             </button>
           </div>
         </div>
@@ -430,35 +512,35 @@ const closeClientDetail = () => {
 
                 <!-- Category Pill Tag (Matches screenshot) -->
                 <span class="text-[11px] font-medium px-3 py-1 rounded-full border" :class="card.badgeBg">
-                  {{ card.categoryName }}
+                  {{ getClientField(card, 'categoryName') }}
                 </span>
               </div>
 
               <!-- Card Title -->
               <h4 class="text-lg sm:text-xl font-bold text-forestBlack dark:text-white mb-1 group-hover:text-emeraldCore dark:group-hover:text-[#00E588] transition-colors">
-                {{ card.title }}
+                {{ getClientField(card, 'title') }}
               </h4>
 
               <!-- Card Subtitle -->
               <div class="text-xs font-mono font-semibold text-[#00875A] dark:text-[#00E588] mb-3">
-                {{ card.subtitle }}
+                {{ getClientField(card, 'subtitle') }}
               </div>
 
               <!-- Card Description -->
               <p class="text-xs sm:text-sm text-forestBlack/75 dark:text-neutral-300 leading-relaxed mb-6">
-                {{ card.description }}
+                {{ getClientField(card, 'description') }}
               </p>
             </div>
 
             <!-- Card Bottom: Link Action (ดูข้อมูลความร่วมมือ ↗) -->
             <div class="pt-4 border-t border-forestBlack/5 dark:border-white/10 flex items-center justify-between">
               <span class="text-xs font-semibold text-forestBlack/80 dark:text-neutral-300 group-hover:text-emeraldCore dark:group-hover:text-[#00E588] transition-colors flex items-center gap-1.5">
-                <span>ดูข้อมูลความร่วมมือ</span>
+                <span>{{ locale === 'th' ? 'ดูข้อมูลความร่วมมือ' : 'View Collaboration' }}</span>
                 <span class="text-sm transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5">↗</span>
               </span>
 
-              <span v-if="card.stats" class="text-[10px] font-mono text-mutedSlate dark:text-neutral-400">
-                {{ card.stats }}
+              <span v-if="getClientField(card, 'stats')" class="text-[10px] font-mono text-mutedSlate dark:text-neutral-400">
+                {{ getClientField(card, 'stats') }}
               </span>
             </div>
           </div>
@@ -487,28 +569,28 @@ const closeClientDetail = () => {
 
         <!-- Category Tag -->
         <div class="inline-block text-[11px] font-medium px-3 py-1 rounded-full border mb-3" :class="selectedClient.badgeBg">
-          {{ selectedClient.categoryName }}
+          {{ getClientField(selectedClient, 'categoryName') }}
         </div>
 
         <h3 class="text-2xl font-bold text-forestBlack dark:text-white mb-1">
-          {{ selectedClient.title }}
+          {{ getClientField(selectedClient, 'title') }}
         </h3>
         <p class="text-xs font-mono font-semibold text-emeraldCore dark:text-[#00E588] mb-4">
-          {{ selectedClient.subtitle }}
+          {{ getClientField(selectedClient, 'subtitle') }}
         </p>
 
         <div class="space-y-4 text-xs sm:text-sm text-forestBlack/80 dark:text-neutral-200 leading-relaxed">
-          <p>{{ selectedClient.description }}</p>
+          <p>{{ getClientField(selectedClient, 'description') }}</p>
 
           <div class="p-4 rounded-2xl bg-[#F8FAF9] dark:bg-[#12261C] border border-forestBlack/5 dark:border-[#00C978]/20 space-y-2">
             <div class="flex items-center gap-2 text-xs font-semibold text-emeraldCore dark:text-[#00E588]">
-              <span>📦 ซอฟต์แวร์ / โซลูชันที่นำไปใช้งาน:</span>
+              <span>{{ locale === 'th' ? '📦 ซอฟต์แวร์ / โซลูชันที่นำไปใช้งาน:' : '📦 Deployed Software & Solution Architecture:' }}</span>
             </div>
             <div class="font-bold text-forestBlack dark:text-white">
-              {{ selectedClient.solution }}
+              {{ getClientField(selectedClient, 'solution') }}
             </div>
-            <div v-if="selectedClient.stats" class="text-xs text-mutedSlate dark:text-neutral-300">
-              • ผลลัพธ์: {{ selectedClient.stats }}
+            <div v-if="getClientField(selectedClient, 'stats')" class="text-xs text-mutedSlate dark:text-neutral-300">
+              {{ locale === 'th' ? '• ผลลัพธ์:' : '• Outcome:' }} {{ getClientField(selectedClient, 'stats') }}
             </div>
           </div>
         </div>
@@ -519,13 +601,13 @@ const closeClientDetail = () => {
             @click="closeClientDetail"
             class="px-4 py-2.5 rounded-xl border border-forestBlack/15 dark:border-white/20 text-xs font-semibold text-forestBlack dark:text-white hover:bg-forestBlack/5 transition-colors cursor-pointer"
           >
-            ปิดหน้าต่าง
+            {{ locale === 'th' ? 'ปิดหน้าต่าง' : 'Close' }}
           </button>
           <button
             @click="closeClientDetail(); openDemo()"
             class="px-5 py-2.5 rounded-xl bg-[#00C978] hover:bg-[#00B36B] text-forestBlack font-bold text-xs transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
           >
-            <span>สอบถามแนวทางการนำไปใช้งาน</span>
+            <span>{{ locale === 'th' ? 'สอบถามแนวทางการนำไปใช้งาน' : 'Inquire About Deployment' }}</span>
             <span>↗</span>
           </button>
         </div>

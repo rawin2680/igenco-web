@@ -88,13 +88,21 @@ const resetForm = () => {
 
             <!-- Two-Tone Headline -->
             <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-[1.2] mb-5">
-              <span class="text-forestBlack block">ติดต่อเราเพื่อปรึกษาและนัด</span>
-              <span class="text-[#00A86B] block">สาธิตระบบ</span>
+              <template v-if="locale === 'th'">
+                <span class="text-forestBlack block">ติดต่อเราเพื่อปรึกษาและนัด</span>
+                <span class="text-[#00A86B] block">สาธิตระบบ</span>
+              </template>
+              <template v-else>
+                <span class="text-forestBlack block">Contact Us for Consultation &</span>
+                <span class="text-[#00A86B] block">Product Demonstration</span>
+              </template>
             </h2>
 
             <!-- Description -->
             <p class="text-xs sm:text-sm text-mutedSlate leading-relaxed">
-              ทีมที่ปรึกษาและวิศวกรซอฟต์แวร์ของ <strong>บริษัท ไอเจนโก้ จำกัด (IGENCO)</strong> พร้อมให้คำแนะนำการวางระบบสารสนเทศระดับองค์กร นัดสาธิตการใช้งานผลิตภัณฑ์ (Demo) และจัดทำใบเสนอราคาที่ตอบโจทย์หน่วยงานของคุณโดยเฉพาะ
+              {{ locale === 'th'
+                ? 'ทีมที่ปรึกษาและวิศวกรซอฟต์แวร์ของ บริษัท ไอเจนโก้ จำกัด (IGENCO) พร้อมให้คำแนะนำการวางระบบสารสนเทศระดับองค์กร นัดสาธิตการใช้งานผลิตภัณฑ์ (Demo) และจัดทำใบเสนอราคาที่ตอบโจทย์หน่วยงานของคุณโดยเฉพาะ'
+                : 'Consulting architects and engineers at IGENCO Co., Ltd. are ready to guide your enterprise IT architecture, arrange live product demos, and prepare tailored proposals.' }}
             </p>
           </div>
 
@@ -110,10 +118,10 @@ const resetForm = () => {
               </div>
               <div>
                 <h4 class="font-bold text-xs sm:text-sm text-forestBlack mb-1">
-                  นัดสาธิตระบบ (Demo)
+                  {{ locale === 'th' ? 'นัดสาธิตระบบ (Demo)' : 'Schedule Demo' }}
                 </h4>
                 <p class="text-[11px] text-mutedSlate leading-relaxed">
-                  ชมการทำงานจริงของ iSmartFlow, HR.ai, I-SERFF และ iGenQ
+                  {{ locale === 'th' ? 'ชมการทำงานจริงของ iSmartFlow, HR.ai, I-SERFF และ iGenQ' : 'Live demonstration of iSmartFlow, HR.ai, I-SERFF, and iGenQ' }}
                 </p>
               </div>
             </div>
@@ -127,10 +135,10 @@ const resetForm = () => {
               </div>
               <div>
                 <h4 class="font-bold text-xs sm:text-sm text-forestBlack mb-1">
-                  ขอใบเสนอราคา (TOR / Quote)
+                  {{ locale === 'th' ? 'ขอใบเสนอราคา (TOR / Quote)' : 'Request Proposal (TOR / Quote)' }}
                 </h4>
                 <p class="text-[11px] text-mutedSlate leading-relaxed">
-                  ประเมินงบประมาณและขอบเขตงาน สำหรับหน่วยงานภาครัฐและเอกชน
+                  {{ locale === 'th' ? 'ประเมินงบประมาณและขอบเขตงาน สำหรับหน่วยงานภาครัฐและเอกชน' : 'Budget and scope assessment for public sector and private enterprises' }}
                 </p>
               </div>
             </div>
@@ -144,10 +152,10 @@ const resetForm = () => {
               </div>
               <div>
                 <h4 class="font-bold text-xs sm:text-sm text-forestBlack mb-1">
-                  ฝ่ายบริการลูกค้า & MA
+                  {{ locale === 'th' ? 'ฝ่ายบริการลูกค้า & MA' : 'Customer Support & MA' }}
                 </h4>
                 <p class="text-[11px] text-mutedSlate leading-relaxed">
-                  ดูแลบำรุงรักษาระบบและให้คำปรึกษาทางเทคนิคอย่างต่อเนื่อง
+                  {{ locale === 'th' ? 'ดูแลบำรุงรักษาระบบและให้คำปรึกษาทางเทคนิคอย่างต่อเนื่อง' : 'Dedicated software maintenance, SLA assurance, and technical support' }}
                 </p>
               </div>
             </div>
@@ -162,10 +170,10 @@ const resetForm = () => {
               </div>
               <div>
                 <h4 class="font-bold text-xs sm:text-sm text-forestBlack mb-1">
-                  เวลาทำการสำนักงาน
+                  {{ locale === 'th' ? 'เวลาทำการสำนักงาน' : 'Office Hours' }}
                 </h4>
                 <p class="text-[11px] text-mutedSlate leading-relaxed">
-                  วันจันทร์ – วันศุกร์ เวลา 08:30 – 17:30 น.
+                  {{ locale === 'th' ? 'วันจันทร์ – วันศุกร์ เวลา 08:30 – 17:30 น.' : 'Monday – Friday, 08:30 AM – 05:30 PM (ICT)' }}
                 </p>
               </div>
             </div>
@@ -191,7 +199,7 @@ const resetForm = () => {
             </div>
             <!-- Title -->
             <h3 class="text-lg font-bold text-forestBlack mb-5">
-              ช่องทางติดต่อบริษัทโดยตรง
+              {{ locale === 'th' ? 'ช่องทางติดต่อบริษัทโดยตรง' : 'Direct Contact Channels' }}
             </h3>
 
             <!-- Phone Section -->
@@ -200,28 +208,28 @@ const resetForm = () => {
                 <svg class="w-4 h-4 text-[#00C978]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
                 </svg>
-                <span>โทรศัพท์ติดต่อฝ่ายขายและบริการ</span>
+                <span>{{ locale === 'th' ? 'โทรศัพท์ติดต่อฝ่ายขายและบริการ' : 'Sales & Service Phone Lines' }}</span>
               </div>
               <!-- Phone Pills -->
               <div class="flex flex-wrap gap-2">
                 <a
                   href="tel:025233559"
                   class="px-3 py-1.5 rounded-full text-xs font-mono font-semibold bg-[#F8FAF9] hover:bg-[#E8F8F2] hover:text-[#00875A] border border-forestBlack/10 transition-colors"
-                  title="โทร 0-2523-3559 (ชั้น 2)"
+                  title="0-2523-3559"
                 >
-                  0-2523-3559 <span class="text-[10px] text-mutedSlate font-sans font-normal">(ชั้น 2)</span>
+                  0-2523-3559 <span class="text-[10px] text-mutedSlate font-sans font-normal">({{ locale === 'th' ? 'ชั้น 2' : 'Fl 2' }})</span>
                 </a>
                 <a
                   href="tel:025233560"
                   class="px-3 py-1.5 rounded-full text-xs font-mono font-semibold bg-[#F8FAF9] hover:bg-[#E8F8F2] hover:text-[#00875A] border border-forestBlack/10 transition-colors"
-                  title="โทร 0-2523-3560 (ชั้น 3)"
+                  title="0-2523-3560"
                 >
-                  0-2523-3560 <span class="text-[10px] text-mutedSlate font-sans font-normal">(ชั้น 3)</span>
+                  0-2523-3560 <span class="text-[10px] text-mutedSlate font-sans font-normal">({{ locale === 'th' ? 'ชั้น 3' : 'Fl 3' }})</span>
                 </a>
                 <a
                   href="tel:0635254850"
                   class="px-3 py-1.5 rounded-full text-xs font-mono font-semibold bg-[#F8FAF9] hover:bg-[#E8F8F2] hover:text-[#00875A] border border-forestBlack/10 transition-colors"
-                  title="โทร 063-525-4850"
+                  title="063-525-4850"
                 >
                   063-525-4850
                 </a>
@@ -234,7 +242,7 @@ const resetForm = () => {
                 <svg class="w-4 h-4 text-[#00C978]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                 </svg>
-                <span>อีเมลติดต่อฝ่ายขาย (Sales & Support)</span>
+                <span>{{ locale === 'th' ? 'อีเมลติดต่อฝ่ายขาย (Sales & Support)' : 'Sales & Support Email' }}</span>
               </div>
               <div class="flex items-center justify-between gap-3 bg-[#F8FAF9] p-3 rounded-2xl border border-forestBlack/5">
                 <span class="font-mono text-xs sm:text-sm font-bold text-[#00875A]">
@@ -245,8 +253,8 @@ const resetForm = () => {
                   @click="copyToClipboard('sales@igenco.co.th', 'email')"
                   class="px-3 py-1 rounded-full text-xs font-semibold bg-white hover:bg-forestBlack/5 text-forestBlack border border-forestBlack/15 transition-all cursor-pointer active:scale-95"
                 >
-                  <span v-if="copiedField === 'email'" class="text-[#00875A]">✓ คัดลอกแล้ว</span>
-                  <span v-else>คัดลอกอีเมล</span>
+                  <span v-if="copiedField === 'email'" class="text-[#00875A]">✓ {{ locale === 'th' ? 'คัดลอกแล้ว' : 'Copied' }}</span>
+                  <span v-else>{{ locale === 'th' ? 'คัดลอกอีเมล' : 'Copy Email' }}</span>
                 </button>
               </div>
             </div>
@@ -267,17 +275,19 @@ const resetForm = () => {
                   HEADQUARTERS
                 </div>
                 <h3 class="text-sm sm:text-base font-bold text-forestBlack leading-snug">
-                  บริษัท ไอเจนโก้ จำกัด (IGENCO.Co.,Ltd)
+                  {{ locale === 'th' ? 'บริษัท ไอเจนโก้ จำกัด (IGENCO.Co.,Ltd)' : 'IGENCO Co., Ltd.' }}
                 </h3>
               </div>
             </div>
 
             <!-- Address Text -->
             <p class="text-xs text-mutedSlate leading-relaxed mb-3">
-              89/35 อาคารจูเคี่ยวเล้ง ชั้น 3 ถนนวิภาวดีรังสิต แขวงสนามบิน เขตดอนเมือง กรุงเทพมหานคร 10210
+              {{ locale === 'th'
+                ? '89/35 อาคารจูเคี่ยวเล้ง ชั้น 3 ถนนวิภาวดีรังสิต แขวงสนามบิน เขตดอนเมือง กรุงเทพมหานคร 10210'
+                : '89/35 Jukieoleng Bldg, 3rd Fl., Vibhavadi Rangsit Rd., Sanambin, Don Mueang, Bangkok 10210, Thailand' }}
             </p>
             <div class="text-[11px] text-mutedSlate/80 font-mono mb-5">
-              เลขประจำตัวผู้เสียภาษี : 0115553003741
+              {{ locale === 'th' ? 'เลขประจำตัวผู้เสียภาษี : 0115553003741' : 'Tax Identification No. : 0115553003741' }}
             </div>
 
             <!-- Map & Copy Buttons -->
@@ -289,7 +299,7 @@ const resetForm = () => {
                 rel="noopener noreferrer"
                 class="px-4 py-2 rounded-full text-xs font-semibold bg-[#00875A] hover:bg-[#00704A] text-white flex items-center gap-1.5 transition-all shadow-sm active:scale-95"
               >
-                <span>🗺️ เปิดแผนที่ Google Maps</span>
+                <span>🗺️ {{ locale === 'th' ? 'เปิดแผนที่ Google Maps' : 'Open Google Maps' }}</span>
                 <span>↗</span>
               </a>
 
@@ -299,8 +309,8 @@ const resetForm = () => {
                 @click="copyToClipboard('89/35 อาคารจูเคี่ยวเล้ง ชั้น 3 ถนนวิภาวดีรังสิต แขวงสนามบิน เขตดอนเมือง กรุงเทพมหานคร 10210', 'address')"
                 class="px-4 py-2 rounded-full text-xs font-semibold bg-white hover:bg-forestBlack/5 text-forestBlack border border-forestBlack/15 transition-all cursor-pointer active:scale-95"
               >
-                <span v-if="copiedField === 'address'" class="text-[#00875A]">✓ คัดลอกแล้ว</span>
-                <span v-else>คัดลอกที่อยู่</span>
+                <span v-if="copiedField === 'address'" class="text-[#00875A]">✓ {{ locale === 'th' ? 'คัดลอกแล้ว' : 'Copied' }}</span>
+                <span v-else>{{ locale === 'th' ? 'คัดลอกที่อยู่' : 'Copy Address' }}</span>
               </button>
             </div>
           </div>
@@ -317,11 +327,13 @@ const resetForm = () => {
             </div>
             <!-- Title -->
             <h3 class="text-xl sm:text-2xl font-bold text-forestBlack mb-2">
-              แบบฟอร์มติดต่อเรา / ขอคำปรึกษา
+              {{ locale === 'th' ? 'แบบฟอร์มติดต่อเรา / ขอคำปรึกษา' : 'Contact Us / Consultation Request' }}
             </h3>
             <!-- Subtitle -->
             <p class="text-xs text-mutedSlate mb-6 leading-relaxed">
-              กรอกรายละเอียดความต้องการของหน่วยงานท่าน เพื่อให้ทีมผู้เชี่ยวชาญติดต่อกลับภายใน 1 วันทำการ
+              {{ locale === 'th'
+                ? 'กรอกรายละเอียดความต้องการของหน่วยงานท่าน เพื่อให้ทีมผู้เชี่ยวชาญติดต่อกลับภายใน 1 วันทำการ'
+                : 'Please fill in your organization requirements and our solution specialists will get in touch within 1 business day.' }}
             </p>
 
             <!-- Form -->
@@ -331,26 +343,26 @@ const resetForm = () => {
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label class="block text-xs font-semibold text-forestBlack mb-1.5">
-                    ชื่อ-นามสกุล ผู้ติดต่อ <span class="text-red-500">*</span>
+                    {{ locale === 'th' ? 'ชื่อ-นามสกุล ผู้ติดต่อ' : 'Contact Name' }} <span class="text-red-500">*</span>
                   </label>
                   <input
                     v-model="form.contactName"
                     required
                     type="text"
-                    placeholder="ระบุชื่อ-นามสกุล"
+                    :placeholder="locale === 'th' ? 'ระบุชื่อ-นามสกุล' : 'Full Name'"
                     class="w-full bg-[#F8FAF9] text-xs sm:text-sm text-forestBlack placeholder-mutedSlate px-3.5 py-2.5 rounded-xl border border-forestBlack/10 focus:outline-none focus:border-[#00C978]"
                   />
                 </div>
 
                 <div>
                   <label class="block text-xs font-semibold text-forestBlack mb-1.5">
-                    ชื่อหน่วยงาน / บริษัท <span class="text-red-500">*</span>
+                    {{ locale === 'th' ? 'ชื่อหน่วยงาน / บริษัท' : 'Company / Organization' }} <span class="text-red-500">*</span>
                   </label>
                   <input
                     v-model="form.organization"
                     required
                     type="text"
-                    placeholder="ระบุชื่อหน่วยงานหรือบริษัท"
+                    :placeholder="locale === 'th' ? 'ระบุชื่อหน่วยงานหรือบริษัท' : 'Company Name'"
                     class="w-full bg-[#F8FAF9] text-xs sm:text-sm text-forestBlack placeholder-mutedSlate px-3.5 py-2.5 rounded-xl border border-forestBlack/10 focus:outline-none focus:border-[#00C978]"
                   />
                 </div>
@@ -360,7 +372,7 @@ const resetForm = () => {
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label class="block text-xs font-semibold text-forestBlack mb-1.5">
-                    เบอร์โทรศัพท์ติดต่อ <span class="text-red-500">*</span>
+                    {{ locale === 'th' ? 'เบอร์โทรศัพท์ติดต่อ' : 'Phone Number' }} <span class="text-red-500">*</span>
                   </label>
                   <input
                     v-model="form.phone"
@@ -373,7 +385,7 @@ const resetForm = () => {
 
                 <div>
                   <label class="block text-xs font-semibold text-forestBlack mb-1.5">
-                    อีเมลติดต่อ <span class="text-red-500">*</span>
+                    {{ locale === 'th' ? 'อีเมลติดต่อ' : 'Work Email' }} <span class="text-red-500">*</span>
                   </label>
                   <input
                     v-model="form.email"
@@ -389,35 +401,47 @@ const resetForm = () => {
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label class="block text-xs font-semibold text-forestBlack mb-1.5">
-                    เรื่องที่ต้องการติดต่อ <span class="text-red-500">*</span>
+                    {{ locale === 'th' ? 'เรื่องที่ต้องการติดต่อ' : 'Inquiry Subject' }} <span class="text-red-500">*</span>
                   </label>
                   <select
                     v-model="form.subject"
                     class="w-full bg-[#F8FAF9] text-xs sm:text-sm text-forestBlack px-3.5 py-2.5 rounded-xl border border-forestBlack/10 focus:outline-none focus:border-[#00C978]"
                   >
-                    <option value="นัดสาธิตการใช้งานระบบ (Request Demo)">นัดสาธิตการใช้งานระบบ (Request Demo)</option>
-                    <option value="ขอใบเสนอราคา (Request Quotation / TOR)">ขอใบเสนอราคา (Request Quotation / TOR)</option>
-                    <option value="ปรึกษาการวางสถาปัตยกรรม AI ระดับองค์กร">ปรึกษาการวางสถาปัตยกรรม AI ระดับองค์กร</option>
-                    <option value="สอบถามบริการบำรุงรักษา (MA Service)">สอบถามบริการบำรุงรักษา (MA Service)</option>
-                    <option value="เรื่องอื่นๆ">เรื่องอื่นๆ</option>
+                    <option :value="locale === 'th' ? 'นัดสาธิตการใช้งานระบบ (Request Demo)' : 'Request Product Demo'">
+                      {{ locale === 'th' ? 'นัดสาธิตการใช้งานระบบ (Request Demo)' : 'Request Product Demo' }}
+                    </option>
+                    <option :value="locale === 'th' ? 'ขอใบเสนอราคา (Request Quotation / TOR)' : 'Request Quotation / TOR'">
+                      {{ locale === 'th' ? 'ขอใบเสนอราคา (Request Quotation / TOR)' : 'Request Quotation / TOR' }}
+                    </option>
+                    <option :value="locale === 'th' ? 'ปรึกษาการวางสถาปัตยกรรม AI ระดับองค์กร' : 'Enterprise AI Consultation'">
+                      {{ locale === 'th' ? 'ปรึกษาการวางสถาปัตยกรรม AI ระดับองค์กร' : 'Enterprise AI Consultation' }}
+                    </option>
+                    <option :value="locale === 'th' ? 'สอบถามบริการบำรุงรักษา (MA Service)' : 'Maintenance & SLA Support'">
+                      {{ locale === 'th' ? 'สอบถามบริการบำรุงรักษา (MA Service)' : 'Maintenance & SLA Support' }}
+                    </option>
+                    <option :value="locale === 'th' ? 'เรื่องอื่นๆ' : 'Other Inquiries'">
+                      {{ locale === 'th' ? 'เรื่องอื่นๆ' : 'Other Inquiries' }}
+                    </option>
                   </select>
                 </div>
 
                 <div>
                   <label class="block text-xs font-semibold text-forestBlack mb-1.5">
-                    ผลิตภัณฑ์ที่สนใจ
+                    {{ locale === 'th' ? 'ผลิตภัณฑ์ที่สนใจ' : 'Interested Product' }}
                   </label>
                   <select
                     v-model="form.interestedProduct"
                     class="w-full bg-[#F8FAF9] text-xs sm:text-sm text-forestBlack px-3.5 py-2.5 rounded-xl border border-forestBlack/10 focus:outline-none focus:border-[#00C978]"
                   >
-                    <option value="iSmartFlow — ระบบสำนักงานอิเล็กทรอนิกส์ (e-Saraban)">iSmartFlow — ระบบสำนักงานอิเล็กทรอนิกส์</option>
-                    <option value="HR.ai Platform 2026 — ระบบบริหารงานบุคคลอัจฉริยะ">HR.ai Platform 2026 — บริหารงานบุคคล</option>
-                    <option value="I-SERFF Enterprise — ระบบยื่นแบบมาตรฐาน คปภ.">I-SERFF Enterprise — มาตรฐาน คปภ.</option>
-                    <option value="EFMS Data Filing Suite — ระบบจัดเก็บข้อมูล สคฝ.">EFMS Data Filing Suite — ข้อมูล สคฝ.</option>
+                    <option value="iSmartFlow">iSmartFlow (e-Saraban)</option>
+                    <option value="HR.ai Platform 2026">HR.ai Platform 2026</option>
+                    <option value="I-SERFF Enterprise">I-SERFF Enterprise</option>
+                    <option value="EFMS Data Filing Suite">EFMS Data Filing Suite</option>
                     <option value="AI Knowledge & RAG Engine">AI Knowledge & RAG Engine</option>
                     <option value="Autonomous Agentic Core">Autonomous Agentic Core</option>
-                    <option value="สนใจหลายผลิตภัณฑ์ / ปรึกษาภาพรวม">สนใจหลายผลิตภัณฑ์ / ปรึกษาภาพรวม</option>
+                    <option :value="locale === 'th' ? 'สนใจหลายผลิตภัณฑ์ / ปรึกษาภาพรวม' : 'Multiple Products / General Inquiry'">
+                      {{ locale === 'th' ? 'สนใจหลายผลิตภัณฑ์ / ปรึกษาภาพรวม' : 'Multiple Products / General Inquiry' }}
+                    </option>
                   </select>
                 </div>
               </div>
@@ -425,13 +449,13 @@ const resetForm = () => {
               <!-- Row 4: Details -->
               <div>
                 <label class="block text-xs font-semibold text-forestBlack mb-1.5">
-                  รายละเอียดเพิ่มเติม <span class="text-red-500">*</span>
+                  {{ locale === 'th' ? 'รายละเอียดเพิ่มเติม' : 'Message Details' }} <span class="text-red-500">*</span>
                 </label>
                 <textarea
                   v-model="form.details"
                   required
                   rows="4"
-                  placeholder="ระบุรายละเอียดความต้องการ จำนวนผู้ใช้งาน หรือช่วงเวลาที่สะดวกให้เจ้าหน้าที่ติดต่อกลับ..."
+                  :placeholder="locale === 'th' ? 'ระบุรายละเอียดความต้องการ จำนวนผู้ใช้งาน หรือช่วงเวลาที่สะดวกให้เจ้าหน้าที่ติดต่อกลับ...' : 'Please specify requirements, user count, or preferred contact time...'"
                   class="w-full bg-[#F8FAF9] text-xs sm:text-sm text-forestBlack placeholder-mutedSlate p-3.5 rounded-xl border border-forestBlack/10 focus:outline-none focus:border-[#00C978] resize-none"
                 ></textarea>
               </div>
@@ -439,7 +463,7 @@ const resetForm = () => {
               <!-- Bottom Action & PDPA Note -->
               <div class="pt-3 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div class="text-[11px] text-mutedSlate text-center sm:text-left">
-                  ข้อมูลของท่านได้รับการคุ้มครองตามนโยบายความเป็นส่วนตัว (PDPA)
+                  {{ locale === 'th' ? 'ข้อมูลของท่านได้รับการคุ้มครองตามนโยบายความเป็นส่วนตัว (PDPA)' : 'Your data is protected under our Privacy Policy (PDPA compliant).' }}
                 </div>
 
                 <button
@@ -447,8 +471,8 @@ const resetForm = () => {
                   :disabled="isSubmitting"
                   class="w-full sm:w-auto px-6 py-3 rounded-full text-xs sm:text-sm font-bold bg-[#00C978] hover:bg-[#00B36B] text-forestBlack active:scale-95 transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
                 >
-                  <span v-if="!isSubmitting">ยืนยันการส่งข้อความติดต่อ</span>
-                  <span v-else>กำลังส่งข้อมูล...</span>
+                  <span v-if="!isSubmitting">{{ locale === 'th' ? 'ยืนยันการส่งข้อความติดต่อ' : 'Submit Inquiry' }}</span>
+                  <span v-else>{{ locale === 'th' ? 'กำลังส่งข้อมูล...' : 'Sending...' }}</span>
                   <span class="text-sm">↗</span>
                 </button>
               </div>
@@ -461,17 +485,19 @@ const resetForm = () => {
                 ✓
               </div>
               <h4 class="text-lg font-bold text-forestBlack">
-                ส่งข้อมูลเรียบร้อยแล้ว
+                {{ locale === 'th' ? 'ส่งข้อมูลเรียบร้อยแล้ว' : 'Inquiry Submitted Successfully' }}
               </h4>
               <p class="text-xs text-mutedSlate max-w-md mx-auto leading-relaxed">
-                ขอบคุณสำหรับความสนใจในโซลูชันของ IGENCO ทีมวิศวกรผู้เชี่ยวชาญจะติดต่อกลับไปยังหมายเลข <strong>{{ form.phone }}</strong> หรืออีเมล <strong>{{ form.email }}</strong> ภายใน 1 วันทำการครับ
+                {{ locale === 'th'
+                  ? `ขอบคุณสำหรับความสนใจในโซลูชันของ IGENCO ทีมวิศวกรผู้เชี่ยวชาญจะติดต่อกลับไปยังหมายเลข ${form.phone} หรืออีเมล ${form.email} ภายใน 1 วันทำการครับ`
+                  : `Thank you for your interest in IGENCO solutions. Our specialists will contact you at ${form.phone} or ${form.email} within 1 business day.` }}
               </p>
               <button
                 type="button"
                 @click="resetForm"
                 class="mt-4 px-6 py-2.5 rounded-full text-xs font-semibold bg-forestBlack text-white hover:bg-emeraldCore transition-colors cursor-pointer"
               >
-                ส่งข้อความเพิ่มเติม
+                {{ locale === 'th' ? 'ส่งข้อความเพิ่มเติม' : 'Send Another Inquiry' }}
               </button>
             </div>
 

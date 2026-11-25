@@ -32,12 +32,132 @@ const activeCategory = ref<string>('all')
 const selectedProduct = ref<ProductItem | null>(null)
 
 // รายการหมวดหมู่สำหรับ Filter
-const categories = [
-  { key: 'all', name: 'ทั้งหมด', count: 9 },
-  { key: 'smart-software', name: 'ซอฟต์แวร์อัจฉริยะ', count: 5 },
-  { key: 'gov-standard', name: 'ระบบมาตรฐานภาครัฐ', count: 2 },
-  { key: 'cloud-ai', name: 'Cloud & AI Analytics', count: 2 }
-]
+const categories = computed(() => [
+  { key: 'all', name: locale.value === 'th' ? 'ทั้งหมด' : 'All Products', count: 9 },
+  { key: 'smart-software', name: locale.value === 'th' ? 'ซอฟต์แวร์อัจฉริยะ' : 'Smart Software', count: 5 },
+  { key: 'gov-standard', name: locale.value === 'th' ? 'ระบบมาตรฐานภาครัฐ' : 'Gov Standards', count: 2 },
+  { key: 'cloud-ai', name: locale.value === 'th' ? 'Cloud & AI Analytics' : 'Cloud & AI Analytics', count: 2 }
+])
+
+const enTranslations: Record<string, { categoryName?: string; description?: string; fullDescription?: string; features?: string[]; priceText?: string }> = {
+  ismartflow: {
+    categoryName: 'Smart Software',
+    description: 'Electronic office administration system (e-Saraban) and automated approval routing, streamlining enterprise document workflows.',
+    fullDescription: 'iSmartFlow is an enterprise e-Office & e-Saraban platform certified under ISO/IEC 29110 standards. It features legally-binding Digital Signatures, dynamic multi-tier approval routing, and seamless REST API integrations.',
+    features: [
+      'Electronic document lifecycle: dispatch, receipt, endorsement, and digital signature',
+      'Fully customizable, multi-tier dynamic approval workflows',
+      'Omnichannel alerts via LINE Notify, Email, and Mobile Web',
+      'Optical Character Recognition (OCR) and high-speed full-text search'
+    ],
+    priceText: 'Contact Sales'
+  },
+  'hr-ai-platform': {
+    categoryName: 'HR Management',
+    description: 'Smart Human Resource Management platform encompassing Time Attendance, Automated Payroll, Flexible Benefits, and OKRs/KPIs.',
+    fullDescription: 'HR.ai Platform 2026 elevates human capital management with AI-powered automation, mobile GPS time tracking, Thai labor law-compliant payroll, flexible benefit plans, and 360-degree performance intelligence.',
+    features: [
+      'Mobile time attendance with facial recognition and geo-fenced GPS',
+      '1-click payroll, social security, withholding tax, and bank file generation',
+      'Comprehensive Employee Self-Service (ESS) and Manager Portals (MSS)',
+      '360-degree smart OKR and KPI evaluation dashboards'
+    ],
+    priceText: 'Starts 15,000 THB/mo'
+  },
+  'iserff-enterprise': {
+    categoryName: 'OIC Standard RegTech',
+    description: 'Electronic insurance policy filing and endorsement submission system compliant with OIC national regulatory standards.',
+    fullDescription: 'Purpose-built to interface with the Office of Insurance Commission (OIC) I-SERFF infrastructure, enabling non-life and life insurance enterprises to validate and submit regulatory filings with bank-grade encryption.',
+    features: [
+      'Direct API integration with the OIC regulatory gateway',
+      'Automated document completeness & schema compliance validation',
+      'Zero-trust security and end-to-end cryptographic encryption',
+      'Real-time regulatory approval status tracking and audit trail'
+    ],
+    priceText: 'Tailored for Enterprise'
+  },
+  'efms-filing': {
+    categoryName: 'DPA RegTech System',
+    description: 'Electronic filing and data exchange gateway between the Deposit Protection Agency and member financial institutions.',
+    fullDescription: 'A high-throughput electronic filing pipeline connecting commercial banks with the Deposit Protection Agency (DPA), guaranteeing 99.99% availability and cryptographic data integrity.',
+    features: [
+      'AES-256 encrypted banking file interchange protocols',
+      'Automated deposit data structure validation & anomaly detection',
+      'Comprehensive immutable audit logging for regulatory inspection'
+    ],
+    priceText: 'Contact Sales'
+  },
+  'rag-engine': {
+    categoryName: 'AI & Knowledge Base',
+    description: 'Enterprise semantic search and RAG synthesis engine with 100% verified citations, zero hallucination.',
+    fullDescription: 'Unleash sovereign Large Language Models atop internal document repositories, transforming corporate policies, manuals, and compliance archives into an interactive, verifiable Knowledge Graph.',
+    features: [
+      'Bilingual Thai/English deep semantic retrieval',
+      'Exact citation page references on every response for total audibility',
+      'Deployable On-Premise or in dedicated Sovereign Private Cloud'
+    ],
+    priceText: 'Starts 29,000 THB/mo'
+  },
+  'agentic-core': {
+    categoryName: 'Autonomous AI',
+    description: 'Autonomous cognitive AI agent network collaborating 24/7 with human teams for automated workflow execution.',
+    fullDescription: 'Multi-Agent collaborative intelligence that plans, reasons, and executes multi-stage enterprise operations with human-in-the-loop governance.',
+    features: [
+      'Multi-Agent orchestration architecture with shared memory',
+      'Secure external API & database tool invocation framework',
+      'Human-in-the-loop approval gates for critical actions'
+    ],
+    priceText: 'Custom Assessment'
+  },
+  'eprocurement-pro': {
+    categoryName: 'Procurement',
+    description: 'End-to-end electronic procurement and e-Bidding solution for government and private enterprise.',
+    fullDescription: 'Comprehensive procurement lifecycle management from PR/PO initiation, online e-Bidding auctions, vendor vetting, through goods receipt and ERP reconciliation.',
+    features: [
+      'Full compliance with Ministry of Finance procurement regulations',
+      'Interactive Vendor Portal for online bid submission and invoice tracking',
+      'Automated multi-criteria price comparison and scoring analytics'
+    ],
+    priceText: 'Contact Sales'
+  },
+  'idp-ocr': {
+    categoryName: 'AI OCR & Vision',
+    description: 'High-precision intelligent document processing to extract structured data from tax invoices, IDs, and financial contracts.',
+    fullDescription: 'Converts scanned paperwork and digital PDFs into ERP-ready structured data using specialized Computer Vision and Thai-English NLP models.',
+    features: [
+      'Scans receipts, tax invoices, national IDs, and structured business forms',
+      '>98.5% extraction accuracy on complex Thai fonts and numerical tables',
+      'Automated structured data dispatch to SAP, Oracle, and enterprise ERPs'
+    ],
+    priceText: 'Starts 12,000 THB/mo'
+  },
+  'smart-erp': {
+    categoryName: 'ERP & Logistics',
+    description: 'Enterprise resource planning & smart inventory management linking supply chain, accounting, and multi-branch sales.',
+    fullDescription: 'Real-time multi-branch ERP and inventory optimization, tracking stock movements, profitability analytics, and AI predictive demand forecasting.',
+    features: [
+      'Real-time multi-warehouse inventory and barcode tracking',
+      'Integrated general ledger, corporate finance, and budget allocation',
+      'Predictive sales trends and automated re-order planning',
+      'Unified Point of Sale (POS) and omnichannel e-Commerce synchronization'
+    ],
+    priceText: 'Starts 25,000 THB/mo'
+  }
+}
+
+const getProductField = (product: ProductItem, field: 'categoryName' | 'description' | 'fullDescription' | 'priceText'): string => {
+  if (locale.value === 'en' && enTranslations[product.id] && enTranslations[product.id][field]) {
+    return enTranslations[product.id][field] as string
+  }
+  return product[field] || ''
+}
+
+const getProductFeatures = (product: ProductItem): string[] => {
+  if (locale.value === 'en' && enTranslations[product.id] && enTranslations[product.id].features) {
+    return enTranslations[product.id].features as string[]
+  }
+  return product.features || []
+}
 
 // ข้อมูลผลิตภัณฑ์ทั้งหมด (9 รายการ พร้อมให้ใส่ข้อมูลเพิ่มเติม)
 const products = ref<ProductItem[]>([
@@ -267,14 +387,21 @@ const closeProductModal = () => {
 
           <!-- Headline: Line 1 Black / Line 2 Green (Matches Screenshot) -->
           <h2 class="text-3xl sm:text-5xl font-bold tracking-tight leading-[1.18] mb-4">
-            <span class="text-forestBlack block">ผลิตภัณฑ์ซอฟต์แวร์และ</span>
-            <span class="text-[#00A86B] block">โซลูชันองค์กร</span>
+            <template v-if="locale === 'th'">
+              <span class="text-forestBlack block">ผลิตภัณฑ์ซอฟต์แวร์และ</span>
+              <span class="text-[#00A86B] block">โซลูชันองค์กร</span>
+            </template>
+            <template v-else>
+              <span class="text-forestBlack block">Software Products &</span>
+              <span class="text-[#00A86B] block">Enterprise Solutions</span>
+            </template>
           </h2>
 
           <!-- Subtitle -->
           <p class="text-xs sm:text-sm text-mutedSlate leading-relaxed">
-            โซลูชันซอฟต์แวร์อัจฉริยะและระบบสารสนเทศมาตรฐานสากล ISO/IEC 29110<br class="hidden sm:inline" />
-            ออกแบบมาเพื่อตอบโจทย์หน่วยงานภาครัฐ รัฐวิสาหกิจ และองค์กรเอกชนโดยเฉพาะ
+            {{ locale === 'th'
+              ? 'โซลูชันซอฟต์แวร์อัจฉริยะและระบบสารสนเทศมาตรฐานสากล ISO/IEC 29110 ออกแบบมาเพื่อตอบโจทย์หน่วยงานภาครัฐ รัฐวิสาหกิจ และองค์กรเอกชนโดยเฉพาะ'
+              : 'Intelligent software solutions and systems certified under ISO/IEC 29110 international standard, designed for government agencies, state enterprises, and private corporations.' }}
           </p>
         </div>
 
@@ -338,7 +465,7 @@ const closeProductModal = () => {
 
             <!-- Top-Left Tag Pill Inside Image -->
             <div class="absolute top-3.5 left-3.5 px-3 py-1 rounded-full bg-forestBlack/80 backdrop-blur-xs text-white/95 text-[11px] font-medium border border-white/10">
-              {{ item.categoryName }}
+              {{ getProductField(item, 'categoryName') }}
             </div>
 
             <!-- Top-Right Number Pill Inside Image -->
@@ -379,7 +506,7 @@ const closeProductModal = () => {
 
           <!-- Product Short Description -->
           <p class="text-xs text-mutedSlate leading-relaxed line-clamp-3 mb-4">
-            {{ item.description }}
+            {{ getProductField(item, 'description') }}
           </p>
 
           <!-- Feature Tag Pills -->
@@ -398,7 +525,7 @@ const closeProductModal = () => {
             
             <!-- Left Price / Contact Label -->
             <div class="text-xs font-semibold text-[#00875A] truncate">
-              {{ item.priceText }}
+              {{ getProductField(item, 'priceText') }}
             </div>
 
             <!-- Right Buttons: [ดูรายละเอียด] & [สอบถามสินค้านี้ ↗] -->
@@ -411,7 +538,7 @@ const closeProductModal = () => {
                 title="ดูรายละเอียดผลิตภัณฑ์ฉบับเต็ม"
               >
                 <span class="text-[11px]">🛈</span>
-                <span>ดูรายละเอียด</span>
+                <span>{{ locale === 'th' ? 'ดูรายละเอียด' : 'Details' }}</span>
               </button>
 
               <!-- Inquire Product Button -->
@@ -421,7 +548,7 @@ const closeProductModal = () => {
                 class="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-forestBlack hover:bg-[#00C978] text-white hover:text-forestBlack transition-all shadow-sm flex items-center gap-1 cursor-pointer active:scale-95"
                 title="สอบถามสินค้านี้กับทีมงาน"
               >
-                <span>สอบถามสินค้านี้</span>
+                <span>{{ locale === 'th' ? 'สอบถามสินค้านี้' : 'Inquire' }}</span>
                 <span class="text-xs text-[#00C978] group-hover:text-forestBlack">↗</span>
               </button>
             </div>
@@ -454,7 +581,7 @@ const closeProductModal = () => {
         <!-- Badge & Number -->
         <div class="flex items-center gap-2.5 mb-2">
           <span class="px-3 py-0.5 rounded-full text-xs font-mono font-bold bg-[#E8F8F2] text-[#00875A] border border-[#B5EAD3]">
-            {{ selectedProduct.categoryName }}
+            {{ getProductField(selectedProduct, 'categoryName') }}
           </span>
           <span class="text-xs font-mono text-mutedSlate font-semibold">
             No. {{ selectedProduct.number }}
@@ -467,17 +594,17 @@ const closeProductModal = () => {
 
         <!-- Description -->
         <p class="text-xs sm:text-sm text-forestBlack/80 leading-relaxed mb-5">
-          {{ selectedProduct.fullDescription || selectedProduct.description }}
+          {{ getProductField(selectedProduct, 'fullDescription') || getProductField(selectedProduct, 'description') }}
         </p>
 
         <!-- Key Features List -->
-        <div v-if="selectedProduct.features && selectedProduct.features.length > 0" class="mb-6 p-4 rounded-2xl bg-[#F8FAF9] border border-forestBlack/5">
+        <div v-if="getProductFeatures(selectedProduct).length > 0" class="mb-6 p-4 rounded-2xl bg-[#F8FAF9] border border-forestBlack/5">
           <h4 class="font-bold text-xs text-forestBlack mb-2.5 flex items-center gap-2">
             <span class="w-1.5 h-3.5 rounded-full bg-[#00C978]"></span>
-            <span>จุดเด่นและคุณสมบัติสำคัญ (Key Capabilities):</span>
+            <span>{{ locale === 'th' ? 'จุดเด่นและคุณสมบัติสำคัญ (Key Capabilities):' : 'Key Capabilities & Features:' }}</span>
           </h4>
           <ul class="space-y-2 text-xs text-mutedSlate">
-            <li v-for="(feat, i) in selectedProduct.features" :key="i" class="flex items-start gap-2">
+            <li v-for="(feat, i) in getProductFeatures(selectedProduct)" :key="i" class="flex items-start gap-2">
               <span class="text-[#00C978] font-bold">✓</span>
               <span>{{ feat }}</span>
             </li>
@@ -498,8 +625,8 @@ const closeProductModal = () => {
         <!-- Price & Action Footer -->
         <div class="pt-4 border-t border-forestBlack/10 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
-            <div class="text-[11px] text-mutedSlate">ประมาณการราคาเบื้องต้น:</div>
-            <div class="text-sm font-bold text-[#00875A]">{{ selectedProduct.priceText }}</div>
+            <div class="text-[11px] text-mutedSlate">{{ locale === 'th' ? 'ประมาณการราคาเบื้องต้น:' : 'Estimated Pricing:' }}</div>
+            <div class="text-sm font-bold text-[#00875A]">{{ getProductField(selectedProduct, 'priceText') }}</div>
           </div>
 
           <div class="flex items-center gap-2.5 w-full sm:w-auto">
@@ -507,13 +634,13 @@ const closeProductModal = () => {
               @click="closeProductModal"
               class="flex-1 sm:flex-none px-5 py-2.5 rounded-full text-xs font-semibold bg-[#F8FAF9] text-forestBlack border border-forestBlack/10 hover:bg-forestBlack/5 transition-colors cursor-pointer"
             >
-              ปิด
+              {{ locale === 'th' ? 'ปิด' : 'Close' }}
             </button>
             <button
               @click="closeProductModal(); openDemo()"
               class="flex-1 sm:flex-none px-6 py-2.5 rounded-full text-xs font-semibold bg-[#00C978] hover:bg-[#00B36B] text-forestBlack transition-all shadow-md cursor-pointer flex items-center justify-center gap-1.5"
             >
-              <span>ขอใบเสนอราคา / นัดหมายสาธิต</span>
+              <span>{{ locale === 'th' ? 'ขอใบเสนอราคา / นัดหมายสาธิต' : 'Request Proposal / Schedule Demo' }}</span>
               <span>→</span>
             </button>
           </div>

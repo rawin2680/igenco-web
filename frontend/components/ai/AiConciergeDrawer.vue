@@ -2,9 +2,11 @@
 import { ref, nextTick, onMounted } from 'vue'
 import { useAppModal } from '~/composables/useModal'
 import { useAiConcierge } from '~/composables/useAiConcierge'
+import { useAppI18n } from '~/composables/useI18n'
 
 const { isChatDrawerOpen, toggleChat, closeChat, openDemo } = useAppModal()
 const { messages, isTyping, presetQuestions, sendMessage } = useAiConcierge()
+const { locale } = useAppI18n()
 
 const inputText = ref('')
 const messagesContainer = ref<HTMLDivElement | null>(null)
@@ -66,7 +68,7 @@ onMounted(() => {
             </div>
             <div class="text-[11px] text-mintGlow flex items-center gap-1.5">
               <span class="w-1.5 h-1.5 rounded-full bg-[#00C978] animate-pulse"></span>
-              <span>ผู้ช่วยสอบถามผลิตภัณฑ์ • ออนไลน์</span>
+              <span>{{ locale === 'th' ? 'ผู้ช่วยสอบถามผลิตภัณฑ์ • ออนไลน์' : 'AI Product Specialist • Online' }}</span>
             </div>
           </div>
         </div>
@@ -74,7 +76,7 @@ onMounted(() => {
         <button
           @click="closeChat"
           class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-neutral-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
-          title="ปิดหน้าต่างแชท"
+          :title="locale === 'th' ? 'ปิดหน้าต่างแชท' : 'Close Chat'"
           aria-label="Close"
         >
           ✕
@@ -104,12 +106,12 @@ onMounted(() => {
           </div>
 
           <!-- Quick Action CTA inside Chat when mentioning Demo/Consult -->
-          <div v-if="msg.sender === 'assistant' && (msg.content.includes('นัดหมาย') || msg.content.includes('Request Demo'))" class="mt-3 pt-2 border-t border-forestBlack/5 dark:border-white/10">
+          <div v-if="msg.sender === 'assistant' && (msg.content.includes('นัดหมาย') || msg.content.includes('Request Demo') || msg.content.includes('Demo') || msg.content.includes('สาธิต'))" class="mt-3 pt-2 border-t border-forestBlack/5 dark:border-white/10">
             <button
               @click="handleOpenDemoFromChat"
               class="w-full py-2 px-3 rounded-xl bg-[#00C978] hover:bg-[#00B36B] text-forestBlack font-semibold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
             >
-              <span>📅 นัดหมายพูดคุยกับทีมสถาปนิก AI</span>
+              <span>{{ locale === 'th' ? '📅 นัดหมายพูดคุยกับทีมสถาปนิก AI' : '📅 Book a Consultation with Specialists' }}</span>
               <span>→</span>
             </button>
           </div>
@@ -146,13 +148,13 @@ onMounted(() => {
         <input
           v-model="inputText"
           type="text"
-          placeholder="ถามข้อมูลผลิตภัณฑ์ AI กับ AI GENCO..."
+          :placeholder="locale === 'th' ? 'ถามข้อมูลผลิตภัณฑ์ AI กับ AI GENCO...' : 'Ask AI GENCO about enterprise solutions...'"
           class="flex-1 bg-[#F8FAF9] dark:bg-[#07120D] text-xs sm:text-sm text-forestBlack dark:text-white placeholder-mutedSlate dark:placeholder-neutral-500 px-3.5 py-2.5 rounded-xl border border-forestBlack/10 dark:border-[#00C978]/30 focus:outline-none focus:border-[#00C978]"
         />
         <button
           type="submit"
           class="p-2.5 rounded-xl bg-forestBlack dark:bg-[#00C978] text-[#00C978] dark:text-forestBlack hover:bg-[#059669] dark:hover:bg-[#00B36B] hover:text-white transition-all cursor-pointer flex-shrink-0 active:scale-95"
-          title="ส่งคำถาม"
+          :title="locale === 'th' ? 'ส่งคำถาม' : 'Send message'"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7"/>
@@ -167,7 +169,9 @@ onMounted(() => {
       class="mb-2 bg-white dark:bg-[#0D1D16] rounded-2xl px-3.5 py-2 shadow-lg border border-forestBlack/10 dark:border-[#00C978]/30 text-xs text-forestBlack dark:text-white flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300"
     >
       <span class="w-2 h-2 rounded-full bg-[#00C978] animate-ping"></span>
-      <span class="font-medium">มีข้อสงสัยเกี่ยวกับผลิตภัณฑ์? สอบถาม <strong>AI GENCO</strong> ได้เลยครับ!</span>
+      <span class="font-medium">
+        {{ locale === 'th' ? 'มีข้อสงสัยเกี่ยวกับผลิตภัณฑ์? สอบถาม AI GENCO ได้เลยครับ!' : 'Have questions about our solutions? Ask AI GENCO!' }}
+      </span>
       <button @click.stop="showTooltip = false" class="text-mutedSlate dark:text-neutral-400 hover:text-forestBlack dark:hover:text-white text-xs p-0.5">✕</button>
     </div>
 
@@ -175,7 +179,7 @@ onMounted(() => {
     <button
       @click="toggleChat(); showTooltip = false"
       class="flex items-center gap-2.5 px-4 sm:px-5 py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-[#09140E] via-[#0D241A] to-[#09140E] dark:from-[#08120D] dark:via-[#0F261C] dark:to-[#08120D] text-white border border-[#00C978]/50 hover:border-[#00C978] shadow-[0_10px_35px_rgba(0,201,120,0.25)] hover:shadow-[0_15px_45px_rgba(0,201,120,0.4)] transition-all group active:scale-95 cursor-pointer backdrop-blur-md"
-      title="สอบถามข้อมูลผลิตภัณฑ์กับ AI GENCO"
+      :title="locale === 'th' ? 'สอบถามข้อมูลผลิตภัณฑ์กับ AI GENCO' : 'Inquire about products with AI GENCO'"
     >
       <!-- Glowing Animated Avatar -->
       <div class="relative flex items-center justify-center w-7 h-7 rounded-full bg-gradient-to-tr from-[#059669] to-[#00C978] text-forestBlack font-black text-xs shadow-inner">
@@ -188,7 +192,7 @@ onMounted(() => {
           AI GENCO
         </div>
         <div class="text-[10px] text-neutral-300 dark:text-neutral-400 font-normal leading-tight">
-          สอบถามผลิตภัณฑ์ AI
+          {{ locale === 'th' ? 'สอบถามผลิตภัณฑ์ AI' : 'AI Product Specialist' }}
         </div>
       </div>
 

@@ -247,8 +247,8 @@ onUnmounted(() => {
             >
               <span class="w-1.5 h-1.5 rounded-full bg-emeraldCore dark:bg-[#00C978]"></span>
               <div>
-                <div class="font-semibold text-forestBlack dark:text-white">บริษัท ไอเจนโก้ จำกัด</div>
-                <div class="text-[10px] text-mutedSlate dark:text-neutral-400">ประวัติ วิสัยทัศน์ และข้อมูลองค์กร</div>
+                <div class="font-semibold text-forestBlack dark:text-white">{{ locale === 'th' ? 'บริษัท ไอเจนโก้ จำกัด' : 'IGENCO Co., Ltd.' }}</div>
+                <div class="text-[10px] text-mutedSlate dark:text-neutral-400">{{ locale === 'th' ? 'ประวัติ วิสัยทัศน์ และข้อมูลองค์กร' : 'History, Vision & Company Info' }}</div>
               </div>
             </button>
             <button
@@ -257,8 +257,8 @@ onUnmounted(() => {
             >
               <span class="w-1.5 h-1.5 rounded-full bg-emeraldCore dark:bg-[#00C978]"></span>
               <div>
-                <div class="font-semibold text-forestBlack dark:text-white">มาตรฐานสากล ISO/IEC 29110</div>
-                <div class="text-[10px] text-mutedSlate dark:text-neutral-400">กระบวนการวิศวกรรมซอฟต์แวร์</div>
+                <div class="font-semibold text-forestBlack dark:text-white">{{ locale === 'th' ? 'มาตรฐานสากล ISO/IEC 29110' : 'ISO/IEC 29110 Standard' }}</div>
+                <div class="text-[10px] text-mutedSlate dark:text-neutral-400">{{ locale === 'th' ? 'กระบวนการวิศวกรรมซอฟต์แวร์' : 'Software Engineering Process' }}</div>
               </div>
             </button>
             <button
@@ -267,8 +267,8 @@ onUnmounted(() => {
             >
               <span class="w-1.5 h-1.5 rounded-full bg-emeraldCore dark:bg-[#00C978]"></span>
               <div>
-                <div class="font-semibold text-forestBlack dark:text-white">ที่ตั้งและช่องทางติดต่อ</div>
-                <div class="text-[10px] text-mutedSlate dark:text-neutral-400">อาคารจูเคี่ยวเล้ง ถ.วิภาวดีรังสิต</div>
+                <div class="font-semibold text-forestBlack dark:text-white">{{ locale === 'th' ? 'ที่ตั้งและช่องทางติดต่อ' : 'Location & Contacts' }}</div>
+                <div class="text-[10px] text-mutedSlate dark:text-neutral-400">{{ locale === 'th' ? 'อาคารจูเคี่ยวเล้ง ถ.วิภาวดีรังสิต' : 'Jukieoleng Bldg, Vibhavadi Rangsit Rd' }}</div>
               </div>
             </button>
           </div>
@@ -312,7 +312,7 @@ onUnmounted(() => {
               <span class="w-1.5 h-1.5 rounded-full bg-emeraldCore dark:bg-[#00C978]"></span>
               <div>
                 <div class="font-semibold text-forestBlack dark:text-white">iSmartFlow (e-Saraban)</div>
-                <div class="text-[10px] text-mutedSlate dark:text-neutral-400">ระบบงานสารบรรณอิเล็กทรอนิกส์</div>
+                <div class="text-[10px] text-mutedSlate dark:text-neutral-400">{{ locale === 'th' ? 'ระบบงานสารบรรณอิเล็กทรอนิกส์' : 'Electronic Document & Approval System' }}</div>
               </div>
             </button>
             <button
@@ -322,7 +322,7 @@ onUnmounted(() => {
               <span class="w-1.5 h-1.5 rounded-full bg-emeraldCore dark:bg-[#00C978]"></span>
               <div>
                 <div class="font-semibold text-forestBlack dark:text-white">HR.ai Platform 2026</div>
-                <div class="text-[10px] text-mutedSlate dark:text-neutral-400">ระบบบริหารทรัพยากรบุคคลอัจฉริยะ</div>
+                <div class="text-[10px] text-mutedSlate dark:text-neutral-400">{{ locale === 'th' ? 'ระบบบริหารทรัพยากรบุคคลอัจฉริยะ' : 'Smart Human Resource Management' }}</div>
               </div>
             </button>
             <button
@@ -332,7 +332,7 @@ onUnmounted(() => {
               <span class="w-1.5 h-1.5 rounded-full bg-emeraldCore dark:bg-[#00C978]"></span>
               <div>
                 <div class="font-semibold text-forestBlack dark:text-white">I-SERFF Enterprise</div>
-                <div class="text-[10px] text-mutedSlate dark:text-neutral-400">ระบบยื่นแบบมาตรฐาน คปภ.</div>
+                <div class="text-[10px] text-mutedSlate dark:text-neutral-400">{{ locale === 'th' ? 'ระบบยื่นแบบมาตรฐาน คปภ.' : 'OIC Insurance Filing Standard Solution' }}</div>
               </div>
             </button>
             <button
@@ -342,7 +342,7 @@ onUnmounted(() => {
               <span class="w-1.5 h-1.5 rounded-full bg-emeraldCore dark:bg-[#00C978]"></span>
               <div>
                 <div class="font-semibold text-forestBlack dark:text-white">iGenQ (Smart Queuing)</div>
-                <div class="text-[10px] text-mutedSlate dark:text-neutral-400">ระบบจัดคิวอัจฉริยะสำหรับองค์กร</div>
+                <div class="text-[10px] text-mutedSlate dark:text-neutral-400">{{ locale === 'th' ? 'ระบบจัดคิวอัจฉริยะสำหรับองค์กร' : 'Smart Enterprise Queue Management' }}</div>
               </div>
             </button>
           </div>

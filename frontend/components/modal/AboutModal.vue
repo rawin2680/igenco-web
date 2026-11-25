@@ -118,8 +118,8 @@ const handleConsultClick = () => {
 
         <!-- Contact & Info -->
         <div class="pt-3 border-t border-forestBlack/10 text-xs text-mutedSlate space-y-1.5">
-          <div><strong class="text-forestBlack">{{ locale === 'th' ? 'สำนักงานใหญ่:' : 'Headquarters:' }}</strong> 89/35 อาคารจูเคี่ยวเล้ง ชั้น 3 ถนนวิภาวดีรังสิต แขวงสนามบิน เขตดอนเมือง กรุงเทพมหานคร 10210</div>
-          <div><strong class="text-forestBlack">{{ locale === 'th' ? 'เบอร์โทรศัพท์:' : 'Phone:' }}</strong> 0-2523-3559 (ชั้น 2), 0-2523-3560 (ชั้น 3), 063-525-4850</div>
+          <div><strong class="text-forestBlack">{{ locale === 'th' ? 'สำนักงานใหญ่:' : 'Headquarters:' }}</strong> {{ locale === 'th' ? '89/35 อาคารจูเคี่ยวเล้ง ชั้น 3 ถนนวิภาวดีรังสิต แขวงสนามบิน เขตดอนเมือง กรุงเทพมหานคร 10210' : '89/35 Chu Kiao Leng Bldg., 3rd Fl., Vibhavadi Rangsit Rd., Sanambin, Don Mueang, Bangkok 10210' }}</div>
+          <div><strong class="text-forestBlack">{{ locale === 'th' ? 'เบอร์โทรศัพท์:' : 'Phone:' }}</strong> 0-2523-3559 (Fl. 2), 0-2523-3560 (Fl. 3), 063-525-4850</div>
           <div><strong class="text-forestBlack">{{ locale === 'th' ? 'อีเมลติดต่อ:' : 'Email:' }}</strong> sales@igenco.co.th</div>
           <div><strong class="text-forestBlack">{{ locale === 'th' ? 'เลขประจำตัวผู้เสียภาษี:' : 'Tax ID:' }}</strong> 0115553003741</div>
         </div>
