@@ -1,0 +1,59 @@
+{
+  "kind": "singleType",
+  "collectionName": "site_settings",
+  "info": {
+    "singularName": "site-setting",
+    "pluralName": "site-settings",
+    "displayName": "Site Setting (ข้อมูลเบื้องต้นบริษัทและ Hero)",
+    "description": "แก้ไขข้อความหน้าแรก ที่อยู่ เบอร์โทร อีเมล และข้อมูลเบื้องต้นขององค์กร"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "hero_badge": {
+      "type": "string",
+      "default": "NEXT-GEN ENTERPRISE AI ARCHITECTURE"
+    },
+    "hero_title_th": { "type": "string" },
+    "hero_title_en": { "type": "string" },
+    "hero_subtitle_th": { "type": "text" },
+    "hero_subtitle_en": { "type": "text" },
+    "company_name_th": {
+      "type": "string",
+      "default": "บริษัท ไอเจนโก้ จำกัด"
+    },
+    "company_name_en": {
+      "type": "string",
+      "default": "IGENCO Co., Ltd."
+    },
+    "address_th": {
+      "type": "text",
+      "default": "89/35 อาคารจูเคี่ยวเล้ง ชั้น 3 ถนนวิภาวดีรังสิต แขวงสนามบิน เขตดอนเมือง กรุงเทพมหานคร 10210"
+    },
+    "address_en": {
+      "type": "text",
+      "default": "89/35 Chu Kiao Leng Bldg., 3rd Fl., Vibhavadi Rangsit Rd., Sanambin, Don Mueang, Bangkok 10210"
+    },
+    "phone": {
+      "type": "string",
+      "default": "0-2523-3559, 0-2523-3560, 063-525-4850"
+    },
+    "email": {
+      "type": "email",
+      "default": "sales@igenco.co.th"
+    },
+    "taxId": {
+      "type": "string",
+      "default": "0115553003741"
+    },
+    "officeHours_th": {
+      "type": "string",
+      "default": "จันทร์ - ศุกร์ เวลา 08:30 - 17:30 น."
+    },
+    "officeHours_en": {
+      "type": "string",
+      "default": "Mon - Fri, 08:30 - 17:30"
+    }
+  }
+}

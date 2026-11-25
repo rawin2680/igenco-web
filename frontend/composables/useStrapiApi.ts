@@ -271,29 +271,119 @@ export const useStrapiApi = () => {
     { id: '5', name: 'KINETIC GROUP' }
   ]
 
+  // Helper: use internal Docker service URL during SSR, public URL in browser
+  const apiBase = import.meta.server && process.env.NUXT_INTERNAL_STRAPI_URL
+    ? process.env.NUXT_INTERNAL_STRAPI_URL
+    : strapiUrl
+
   // ----------------------------------------------------------------------------
-  // API Methods
+  // API Methods (Strapi v5 Compatible + Graceful Fallback)
   // ----------------------------------------------------------------------------
   const getHeroContent = async (): Promise<HeroContent> => {
     if (useMock) return mockHero
     try {
-      const res = await $fetch<{ data: { attributes: HeroContent } }>(`${strapiUrl}/api/hero-section?populate=*`)
-      return res.data.attributes
+      const res = await $fetch<{ data: any }>(`${apiBase}/api/site-setting`)
+      if (res?.data?.hero_title_th) {
+        return {
+          badge: { th: res.data.hero_badge || mockHero.badge.th, en: res.data.hero_badge || mockHero.badge.en },
+          title: { th: res.data.hero_title_th, en: res.data.hero_title_en || res.data.hero_title_th },
+          subtitle: { th: res.data.hero_subtitle_th || mockHero.subtitle.th, en: res.data.hero_subtitle_en || mockHero.subtitle.en },
+          primaryCtaText: mockHero.primaryCtaText,
+          secondaryCtaText: mockHero.secondaryCtaText,
+          hintText: mockHero.hintText
+        }
+      }
+      return mockHero
     } catch (e) {
-      console.warn('Strapi API fallback to mock:', e)
       return mockHero
     }
   }
 
-  const getCapabilities = async (): Promise<CapabilityItem[]> => {
-    if (useMock) return mockCapabilities
+  const getNewsArticles = async () => {
+    if (useMock) return null
     try {
-      const res = await $fetch<{ data: Array<{ id: number; attributes: CapabilityItem }> }>(`${strapiUrl}/api/capabilities?populate=*`)
-      return res.data.map(item => ({ ...item.attributes, id: String(item.id) }))
+      const res = await $fetch<{ data: any[] }>(`${apiBase}/api/news-articles?populate=*&sort=id:asc`)
+      if (!Array.isArray(res?.data) || res.data.length === 0) return null
+      return res.data.map(item => {
+        const uploadedImg = item.image?.url ? `${strapiUrl}${item.image.url}` : null
+        return {
+          id: item.id,
+          tag: item.tag || item.category || 'Enterprise Software',
+          category: item.category || 'Enterprise Software',
+          readTime: item.readTime || '1 min',
+          date: { th: item.date_th || '', en: item.date_en || item.date_th || '' },
+          title: { th: item.title_th, en: item.title_en || item.title_th },
+          subtitle: { th: item.subtitle_th || '', en: item.subtitle_en || item.subtitle_th || '' },
+          body: { th: item.body_th || '', en: item.body_en || item.body_th || '' },
+          fullContent: { th: item.fullContent_th || item.body_th || '', en: item.fullContent_en || item.body_en || '' },
+          image: uploadedImg || item.imageUrl || '/images/news/iso29110.jpg',
+          link: item.externalLink || undefined
+        }
+      })
     } catch (e) {
-      console.warn('Strapi API fallback to mock:', e)
-      return mockCapabilities
+      console.warn('Strapi News API fallback to local data:', e)
+      return null
     }
+  }
+
+  const getProductsFromCms = async () => {
+    if (useMock) return null
+    try {
+      const res = await $fetch<{ data: any[] }>(`${apiBase}/api/products?populate=*&sort=id:asc`)
+      if (!Array.isArray(res?.data) || res.data.length === 0) return null
+      return res.data.map(item => {
+        const uploadedImg = item.image?.url ? `${strapiUrl}${item.image.url}` : null
+        return {
+          ...item,
+          resolvedImage: uploadedImg || item.imageUrl || null
+        }
+      })
+    } catch (e) {
+      console.warn('Strapi Products API fallback to local data:', e)
+      return null
+    }
+  }
+
+  const getClientPartnersFromCms = async () => {
+    if (useMock) return null
+    try {
+      const res = await $fetch<{ data: any[] }>(`${apiBase}/api/client-partners?populate=*&sort=id:asc`)
+      if (!Array.isArray(res?.data) || res.data.length === 0) return null
+      return res.data
+    } catch (e) {
+      console.warn('Strapi Clients API fallback to local data:', e)
+      return null
+    }
+  }
+
+  const submitContactInquiry = async (payload: {
+    contactName: string
+    organization: string
+    phone?: string
+    email: string
+    subject?: string
+    interestedProduct?: string
+    details?: string
+  }): Promise<{ success: boolean; message: string }> => {
+    if (useMock) {
+      console.log('[MOCK API] Contact Inquiry:', payload)
+      await new Promise(r => setTimeout(r, 500))
+      return { success: true, message: 'บันทึกข้อมูลเรียบร้อยแล้ว (Mock)' }
+    }
+    try {
+      await $fetch(`${apiBase}/api/contact-inquiries`, {
+        method: 'POST',
+        body: { data: payload }
+      })
+      return { success: true, message: 'บันทึกข้อมูลเรียบร้อยแล้ว' }
+    } catch (err: any) {
+      console.error('Error submitting contact inquiry to Strapi:', err)
+      return { success: false, message: err?.message || 'เกิดข้อผิดพลาดในการส่งข้อมูล' }
+    }
+  }
+
+  const getCapabilities = async (): Promise<CapabilityItem[]> => {
+    return mockCapabilities
   }
 
   const getBlueprints = async (): Promise<Record<string, IndustryBlueprint>> => {
@@ -309,25 +399,22 @@ export const useStrapiApi = () => {
   }
 
   const submitDemoLead = async (payload: DemoLeadForm): Promise<{ success: boolean; message: string }> => {
-    if (useMock) {
-      console.log('[MOCK API] Demo Request received:', payload)
-      await new Promise(r => setTimeout(r, 600))
-      return { success: true, message: 'ขอบคุณครับ ทีมงานจะติดต่อกลับภายใน 24 ชั่วโมง' }
-    }
-    try {
-      await $fetch(`${strapiUrl}/api/demo-inquiries`, {
-        method: 'POST',
-        body: { data: payload }
-      })
-      return { success: true, message: 'บันทึกข้อมูลเรียบร้อยแล้ว' }
-    } catch (err: any) {
-      console.error('Error submitting lead to Strapi:', err)
-      return { success: false, message: err?.message || 'เกิดข้อผิดพลาดในการส่งข้อมูล' }
-    }
+    return submitContactInquiry({
+      contactName: payload.fullName,
+      organization: payload.companyName,
+      email: payload.workEmail,
+      subject: 'นัดสาธิตการใช้งานระบบ (Modal Request Demo)',
+      interestedProduct: payload.industry || 'Enterprise AI',
+      details: payload.notes || `Industry: ${payload.industry || '-'}`
+    })
   }
 
   return {
     getHeroContent,
+    getNewsArticles,
+    getProductsFromCms,
+    getClientPartnersFromCms,
+    submitContactInquiry,
     getCapabilities,
     getBlueprints,
     getDeployments,

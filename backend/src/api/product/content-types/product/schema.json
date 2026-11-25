@@ -1,0 +1,71 @@
+{
+  "kind": "collectionType",
+  "collectionName": "products",
+  "info": {
+    "singularName": "product",
+    "pluralName": "products",
+    "displayName": "Product & Solution (ผลิตภัณฑ์และบริการ)",
+    "description": "ผลิตภัณฑ์ซอฟต์แวร์ไฮไลต์และ 12 โซลูชันของ IGENCO"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "slug": {
+      "type": "uid",
+      "targetField": "title"
+    },
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "subtitle_th": {
+      "type": "string"
+    },
+    "subtitle_en": {
+      "type": "string"
+    },
+    "description_th": {
+      "type": "text"
+    },
+    "description_en": {
+      "type": "text"
+    },
+    "tag": {
+      "type": "string"
+    },
+    "tags": {
+      "type": "json"
+    },
+    "features_th": {
+      "type": "json"
+    },
+    "features_en": {
+      "type": "json"
+    },
+    "isFeatured": {
+      "type": "boolean",
+      "default": false
+    },
+    "featuredOrder": {
+      "type": "integer",
+      "default": 0
+    },
+    "awardBadge": {
+      "type": "string"
+    },
+    "image": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images"]
+    },
+    "imageUrl": {
+      "type": "string"
+    },
+    "iconType": {
+      "type": "string",
+      "default": "document-pen"
+    }
+  }
+}

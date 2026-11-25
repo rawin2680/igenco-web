@@ -20,7 +20,8 @@ services:
       - NODE_ENV=${NODE_ENV:-development}
       - NUXT_PUBLIC_SITE_URL=${FRONTEND_URL:-http://localhost:3000}
       - NUXT_PUBLIC_STRAPI_URL=${STRAPI_URL:-http://localhost:1337}
-      - NUXT_PUBLIC_USE_MOCK=${FRONTEND_USE_MOCK:-true}
+      - NUXT_INTERNAL_STRAPI_URL=http://backend:1337
+      - NUXT_PUBLIC_USE_MOCK=${FRONTEND_USE_MOCK:-false}
     volumes:
       - ./frontend:/app
       - /app/node_modules

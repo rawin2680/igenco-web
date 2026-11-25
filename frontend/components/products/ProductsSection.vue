@@ -2,9 +2,11 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useAppI18n } from '~/composables/useI18n'
 import { useAppModal } from '~/composables/useModal'
+import { useStrapiApi } from '~/composables/useStrapiApi'
 
 const { locale } = useAppI18n()
 const { openDemo } = useAppModal()
+const { getProductsFromCms } = useStrapiApi()
 
 // ============================================================================
 // 1. FEATURED HIGHLIGHT CAROUSEL (ผลิตภัณฑ์ไฮไลต์ของ IGENCO)
@@ -200,7 +202,7 @@ export interface SolutionCard {
   tags: string[]
 }
 
-const solutionsList: SolutionCard[] = [
+const solutionsList = ref<SolutionCard[]>([
   {
     id: 'i-smartflow',
     iconType: 'document-pen',
@@ -405,7 +407,7 @@ const solutionsList: SolutionCard[] = [
     },
     tags: ['Dedicated Team', 'SA & Developer', 'Enterprise SLA']
   }
-]
+])
 
 // Modal State
 const selectedDetailItem = ref<any | null>(null)
@@ -439,8 +441,39 @@ const closeModal = () => {
   selectedDetailItem.value = null
 }
 
-onMounted(() => {
+onMounted(async () => {
   startAutoPlay()
+  const cmsProducts = await getProductsFromCms()
+  if (cmsProducts && cmsProducts.length > 0) {
+    const iconStyles: Record<string, { iconBg: string; iconColor: string }> = {
+      'document-pen': { iconBg: 'bg-[#E8F8F2] border border-[#B5EAD3]', iconColor: 'text-[#00875A]' },
+      'users': { iconBg: 'bg-[#E0F2FE] border border-[#BAE6FD]', iconColor: 'text-[#0284C7]' },
+      'pie-chart': { iconBg: 'bg-[#CCFBF1] border border-[#99F6E4]', iconColor: 'text-[#0D9488]' },
+      'target': { iconBg: 'bg-[#EDE9FE] border border-[#DDD6FE]', iconColor: 'text-[#7C3AED]' },
+      'badge-id': { iconBg: 'bg-[#F3E8FF] border border-[#E9D5FF]', iconColor: 'text-[#9333EA]' },
+      'graduation': { iconBg: 'bg-[#FEF3C7] border border-[#FDE68A]', iconColor: 'text-[#D97706]' },
+      'building': { iconBg: 'bg-[#E6F4EA] border border-[#CEEAD6]', iconColor: 'text-[#137333]' },
+      'cash-register': { iconBg: 'bg-[#FFE4E6] border border-[#FECDD3]', iconColor: 'text-[#E11D48]' },
+      'heart': { iconBg: 'bg-[#FCE7F3] border border-[#FBCFE8]', iconColor: 'text-[#DB2777]' },
+      'document-case': { iconBg: 'bg-[#CFFAFE] border border-[#A5F3FC]', iconColor: 'text-[#0891B2]' },
+      'code': { iconBg: 'bg-[#F1F5F9] border border-[#E2E8F0]', iconColor: 'text-[#334155]' },
+      'user-tech': { iconBg: 'bg-[#DCFCE7] border border-[#BBF7D0]', iconColor: 'text-[#15803D]' }
+    }
+    solutionsList.value = cmsProducts.map((p: any) => {
+      const style = iconStyles[p.iconType || 'document-pen'] || iconStyles['document-pen']
+      return {
+        id: p.slug || String(p.id),
+        iconType: p.iconType || 'document-pen',
+        iconBg: style.iconBg,
+        iconColor: style.iconColor,
+        tag: p.tag || 'Enterprise',
+        title: p.title,
+        subtitle: { th: p.subtitle_th || '', en: p.subtitle_en || p.subtitle_th || '' },
+        description: { th: p.description_th || '', en: p.description_en || p.description_th || '' },
+        tags: Array.isArray(p.tags) ? p.tags : []
+      }
+    })
+  }
 })
 
 onUnmounted(() => {

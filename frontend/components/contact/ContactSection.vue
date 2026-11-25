@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useAppI18n } from '~/composables/useI18n'
+import { useStrapiApi } from '~/composables/useStrapiApi'
 
 const { locale } = useAppI18n()
+const { submitContactInquiry } = useStrapiApi()
 
 // สถานะการคัดลอก (Copy Feedback)
 const copiedField = ref<string | null>(null)
@@ -38,14 +40,26 @@ const form = ref({
 
 const isSubmitting = ref(false)
 const isSubmitted = ref(false)
+const submitError = ref('')
 
 const handleSubmitInquiry = async () => {
   isSubmitting.value = true
-  // จำลองการส่งข้อมูลแบบฟอร์ม
-  setTimeout(() => {
-    isSubmitting.value = false
+  submitError.value = ''
+  const res = await submitContactInquiry({
+    contactName: form.value.contactName,
+    organization: form.value.organization,
+    phone: form.value.phone,
+    email: form.value.email,
+    subject: form.value.subject,
+    interestedProduct: form.value.interestedProduct,
+    details: form.value.details
+  })
+  isSubmitting.value = false
+  if (res.success) {
     isSubmitted.value = true
-  }, 600)
+  } else {
+    submitError.value = res.message
+  }
 }
 
 const resetForm = () => {

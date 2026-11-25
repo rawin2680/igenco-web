@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useAppI18n } from '~/composables/useI18n'
 import { useAppModal } from '~/composables/useModal'
+import { useStrapiApi } from '~/composables/useStrapiApi'
 
 const { locale } = useAppI18n()
 const { openDemo } = useAppModal()
+const { getNewsArticles } = useStrapiApi()
 
 interface Article {
   id: number
@@ -158,6 +160,13 @@ const openArticle = (article: Article) => {
 const closeArticle = () => {
   selectedArticle.value = null
 }
+
+onMounted(async () => {
+  const cmsArticles = await getNewsArticles()
+  if (cmsArticles && cmsArticles.length > 0) {
+    articles.value = cmsArticles
+  }
+})
 </script>
 
 <template>

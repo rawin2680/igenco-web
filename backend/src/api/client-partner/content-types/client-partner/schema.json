@@ -1,0 +1,34 @@
+{
+  "kind": "collectionType",
+  "collectionName": "client_partners",
+  "info": {
+    "singularName": "client-partner",
+    "pluralName": "client-partners",
+    "displayName": "Client & Partner (ลูกค้าและพันธมิตร)",
+    "description": "กลุ่มผู้ใช้ผลิตภัณฑ์ ลูกค้าภาครัฐ รัฐวิสาหกิจ และเอกชน"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "categoryKey": {
+      "type": "enumeration",
+      "enum": ["gov", "private", "tech"],
+      "default": "gov"
+    },
+    "categoryName_th": { "type": "string" },
+    "categoryName_en": { "type": "string" },
+    "title_th": { "type": "string", "required": true },
+    "title_en": { "type": "string", "required": true },
+    "subtitle_th": { "type": "string" },
+    "subtitle_en": { "type": "string" },
+    "description_th": { "type": "text" },
+    "description_en": { "type": "text" },
+    "solution_th": { "type": "string" },
+    "solution_en": { "type": "string" },
+    "stats_th": { "type": "string" },
+    "stats_en": { "type": "string" },
+    "iconType": { "type": "string", "default": "shield" },
+    "accentColor": { "type": "string", "default": "#00C978" }
+  }
+}

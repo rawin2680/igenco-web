@@ -1,0 +1,76 @@
+{
+  "kind": "collectionType",
+  "collectionName": "news_articles",
+  "info": {
+    "singularName": "news-article",
+    "pluralName": "news-articles",
+    "displayName": "News Article (ข่าวสารและกิจกรรม)",
+    "description": "ข่าวสารประชาสัมพันธ์ บทความ และกิจกรรมองค์กร (รองรับ TH/EN)"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "title_th": {
+      "type": "string",
+      "required": true
+    },
+    "title_en": {
+      "type": "string",
+      "required": true
+    },
+    "subtitle_th": {
+      "type": "string"
+    },
+    "subtitle_en": {
+      "type": "string"
+    },
+    "body_th": {
+      "type": "text"
+    },
+    "body_en": {
+      "type": "text"
+    },
+    "fullContent_th": {
+      "type": "richtext"
+    },
+    "fullContent_en": {
+      "type": "richtext"
+    },
+    "category": {
+      "type": "enumeration",
+      "enum": [
+        "Enterprise Software",
+        "Service Development",
+        "E-Commerce"
+      ],
+      "default": "Enterprise Software"
+    },
+    "tag": {
+      "type": "string",
+      "default": "Enterprise Software"
+    },
+    "readTime": {
+      "type": "string",
+      "default": "1 min"
+    },
+    "date_th": {
+      "type": "string"
+    },
+    "date_en": {
+      "type": "string"
+    },
+    "image": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images"]
+    },
+    "imageUrl": {
+      "type": "string"
+    },
+    "externalLink": {
+      "type": "string"
+    }
+  }
+}
