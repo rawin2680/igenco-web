@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import { useAppI18n } from '~/composables/useI18n'
 import { useAppModal } from '~/composables/useModal'
+import { useStrapiApi } from '~/composables/useStrapiApi'
 import HeroNeuralCore3D from '~/components/hero/NeuralCore3D.client.vue'
 import type { HeroContent } from '~/types/cms'
 
@@ -8,8 +10,15 @@ const props = defineProps<{
   hero?: HeroContent
 }>()
 
-const { locale, t } = useAppI18n()
+const { locale } = useAppI18n()
 const { openAbout, openDemo, openChat } = useAppModal()
+const { getSiteSetting, refreshSiteSetting } = useStrapiApi()
+
+const siteSetting = getSiteSetting()
+
+onMounted(() => {
+  refreshSiteSetting()
+})
 </script>
 
 <template>
@@ -31,38 +40,46 @@ const { openAbout, openDemo, openChat } = useAppModal()
       <!-- Top Eyebrow Tag (NEXT-GEN ENTERPRISE AI ARCHITECTURE) -->
       <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full mb-3 sm:mb-4 pointer-events-auto">
         <span class="text-xs sm:text-[13px] font-semibold tracking-[0.22em] uppercase text-[#059669]">
-          NEXT-GEN ENTERPRISE AI ARCHITECTURE
+          {{ siteSetting.hero_badge }}
         </span>
       </div>
 
       <!-- Hero Headline (Two-Tone Contrast: Line 1 Black / Lines 2 & 3 Vibrant Emerald Green) -->
       <h1 class="text-4xl sm:text-6xl md:text-7xl font-bold tracking-tight leading-[1.18] sm:leading-[1.14] mb-5 sm:mb-6 select-none">
         <template v-if="locale === 'th'">
-          <!-- Line 1: Dark Charcoal / Black (White in Dark Mode) -->
-          <span class="text-forestBlack dark:text-white block">ยกระดับองค์กรสู่อนาคต</span>
-          <!-- Lines 2 & 3: Vibrant Emerald Green -->
-          <span class="text-[#00A86B] dark:text-[#00E588] block">ด้วยสถาปัตยกรรม AI</span>
-          <span class="text-[#00A86B] dark:text-[#00E588] block">อัจฉริยะ</span>
+          <template v-if="siteSetting.hero_title_th && siteSetting.hero_title_th !== 'ยกระดับองค์กรสู่อนาคต ด้วยสถาปัตยกรรม AI อัจฉริยะ'">
+            <span class="text-forestBlack dark:text-white block">{{ siteSetting.hero_title_th }}</span>
+          </template>
+          <template v-else>
+            <!-- Line 1: Dark Charcoal / Black (White in Dark Mode) -->
+            <span class="text-forestBlack dark:text-white block">ยกระดับองค์กรสู่อนาคต</span>
+            <!-- Lines 2 & 3: Vibrant Emerald Green -->
+            <span class="text-[#00A86B] dark:text-[#00E588] block">ด้วยสถาปัตยกรรม AI</span>
+            <span class="text-[#00A86B] dark:text-[#00E588] block">อัจฉริยะ</span>
+          </template>
         </template>
         <template v-else>
-          <span class="text-forestBlack dark:text-white block">Elevating Enterprises</span>
-          <span class="text-[#00A86B] dark:text-[#00E588] block">with Autonomous AI</span>
-          <span class="text-[#00A86B] dark:text-[#00E588] block">Architecture</span>
+          <template v-if="siteSetting.hero_title_en && siteSetting.hero_title_en !== 'Elevating Enterprises with Autonomous AI Architecture'">
+            <span class="text-forestBlack dark:text-white block">{{ siteSetting.hero_title_en }}</span>
+          </template>
+          <template v-else>
+            <span class="text-forestBlack dark:text-white block">Elevating Enterprises</span>
+            <span class="text-[#00A86B] dark:text-[#00E588] block">with Autonomous AI</span>
+            <span class="text-[#00A86B] dark:text-[#00E588] block">Architecture</span>
+          </template>
         </template>
       </h1>
 
       <!-- Subtitle Description -->
       <p class="max-w-2xl mx-auto text-sm sm:text-base md:text-lg text-[#526058] dark:text-[#9BB3A5] font-normal leading-relaxed mb-6 sm:mb-10 px-2 select-none">
-        {{ locale === 'th'
-          ? 'ออกแบบและพัฒนาโซลูชันปัญญาประดิษฐ์ระดับองค์กร ผสานความแม่นยำของข้อมูล ความปลอดภัยสูงสุด และประสบการณ์ดิจิทัลที่ไร้รอยต่อ'
-          : 'Designing enterprise artificial intelligence solutions blending data precision, military-grade security, and seamless digital transformation.' }}
+        {{ locale === 'th' ? siteSetting.hero_subtitle_th : siteSetting.hero_subtitle_en }}
       </p>
 
       <!-- Floating Card for Mobile/Tablet Screens (appears below subtitle on smaller devices) -->
       <div class="lg:hidden w-full max-w-xs mx-auto mb-8 pointer-events-auto">
         <div class="bg-white dark:bg-[#0D1D16] rounded-3xl p-5 shadow-[0_12px_35px_rgba(9,20,14,0.08)] border border-forestBlack/[0.06] dark:border-[#00C978]/30 text-left">
           <h2 class="font-bold text-sm text-forestBlack dark:text-white">
-            {{ locale === 'th' ? 'บริษัท ไอเจนโก้ จำกัด' : 'IGENCO Co., Ltd.' }}
+            {{ locale === 'th' ? siteSetting.company_name_th : siteSetting.company_name_en }}
           </h2>
           <p class="text-[11px] text-mutedSlate/70 dark:text-neutral-400 font-medium mt-0.5">IGENCO.Co.,Ltd</p>
           <p class="text-xs text-mutedSlate dark:text-neutral-300 mt-2.5 mb-4 leading-relaxed">
@@ -102,7 +119,7 @@ const { openAbout, openDemo, openChat } = useAppModal()
     <div class="hidden lg:block absolute left-8 xl:left-14 bottom-12 xl:bottom-16 z-20 pointer-events-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div class="bg-white dark:bg-[#0D1D16] rounded-3xl p-6 shadow-[0_15px_40px_rgba(9,20,14,0.07)] border border-forestBlack/[0.06] dark:border-[#00C978]/30 w-72 text-left">
         <h2 class="font-bold text-[15px] text-forestBlack dark:text-white">
-          {{ locale === 'th' ? 'บริษัท ไอเจนโก้ จำกัด' : 'IGENCO Co., Ltd.' }}
+          {{ locale === 'th' ? siteSetting.company_name_th : siteSetting.company_name_en }}
         </h2>
         <p class="text-[11px] text-mutedSlate/70 dark:text-neutral-400 font-medium mt-0.5">IGENCO.Co.,Ltd</p>
         <p class="text-xs text-mutedSlate dark:text-neutral-300 mt-3 mb-5 leading-relaxed">

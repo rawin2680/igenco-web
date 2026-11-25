@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useAppI18n } from '~/composables/useI18n'
 import { useAppModal } from '~/composables/useModal'
+import { useStrapiApi } from '~/composables/useStrapiApi'
 
 const { locale } = useAppI18n()
 const { openDemo } = useAppModal()
+const { getClientPartnersFromCms } = useStrapiApi()
 
 // Speed controller for dual-track stream
 const streamSpeed = ref<'normal' | 'fast'>('normal')
@@ -29,7 +31,7 @@ interface ClientPartnerItem {
   stats?: string
 }
 
-const clientsData: ClientPartnerItem[] = [
+const clientsData = ref<ClientPartnerItem[]>([
   {
     id: 'oic',
     categoryKey: 'gov',
@@ -147,7 +149,7 @@ const clientsData: ClientPartnerItem[] = [
     solution: 'ERP & Centralized Enterprise Data Lake',
     stats: 'รองรับผู้ใช้งานขนาดใหญ่กว่า 10,000 คน'
   }
-]
+])
 
 // Filtered cards
 const enClientTranslations: Record<string, { categoryName?: string; title?: string; subtitle?: string; description?: string; solution?: string; stats?: string }> = {
@@ -233,26 +235,57 @@ const getClientField = (client: ClientPartnerItem, field: 'categoryName' | 'titl
 }
 
 const filteredClients = computed(() => {
-  if (activeCategory.value === 'all') return clientsData
-  return clientsData.filter(c => c.categoryKey === activeCategory.value)
+  if (activeCategory.value === 'all') return clientsData.value
+  return clientsData.value.filter(c => c.categoryKey === activeCategory.value)
 })
 
 // Dual-track marquee items
-const track1Items = computed(() => [
-  clientsData[1], // สคฝ.
-  clientsData[2], // กลุ่มประกันภัย
-  clientsData[3], // TÜV NORD
-  clientsData[4], // depa
-  clientsData[0]  // สำนักงาน คปภ.
-])
+const track1Items = computed(() => {
+  const list = clientsData.value
+  if (list.length < 5) return list
+  return [list[1], list[2], list[3], list[4], list[0]]
+})
 
-const track2Items = computed(() => [
-  clientsData[6], // AWS & Oracle
-  clientsData[7], // องค์กรเอกชนและโรงพยาบาล
-  clientsData[8], // รัฐวิสาหกิจ
-  clientsData[5], // NVIDIA
-  clientsData[4]  // depa
-])
+const track2Items = computed(() => {
+  const list = clientsData.value
+  if (list.length < 9) return list
+  return [list[6], list[7], list[8], list[5], list[4]]
+})
+
+onMounted(async () => {
+  const cmsClients = await getClientPartnersFromCms()
+  if (cmsClients && cmsClients.length > 0) {
+    const badgeStyles: Record<string, string> = {
+      gov: 'bg-emerald-50 dark:bg-emerald-950/60 text-[#00875A] dark:text-[#00E588] border-emerald-200 dark:border-emerald-800/60',
+      private: 'bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800/60',
+      tech: 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800/60'
+    }
+    clientsData.value = cmsClients.map((c: any) => {
+      const idKey = c.documentId || String(c.id)
+      enClientTranslations[idKey] = {
+        categoryName: c.categoryName_en || c.categoryName_th,
+        title: c.title_en || c.title_th,
+        subtitle: c.subtitle_en || c.subtitle_th,
+        description: c.description_en || c.description_th,
+        solution: c.solution_en || c.solution_th,
+        stats: c.stats_en || c.stats_th
+      }
+      return {
+        id: idKey,
+        categoryKey: c.categoryKey || 'gov',
+        categoryName: c.categoryName_th || '',
+        title: c.title_th || '',
+        subtitle: c.subtitle_th || '',
+        description: c.description_th || '',
+        iconType: c.iconType || 'shield',
+        accentColor: c.accentColor || '#00C978',
+        badgeBg: badgeStyles[c.categoryKey || 'gov'] || badgeStyles.gov,
+        solution: c.solution_th || '',
+        stats: c.stats_th || ''
+      }
+    })
+  }
+})
 
 const openClientDetail = (client: ClientPartnerItem) => {
   selectedClient.value = client

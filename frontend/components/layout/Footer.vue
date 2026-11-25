@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { useAppI18n } from '~/composables/useI18n'
 import { useAppModal } from '~/composables/useModal'
+import { useStrapiApi } from '~/composables/useStrapiApi'
 
 const { locale } = useAppI18n()
 const { openDemo, openAbout, openUserGroups } = useAppModal()
+const { getSiteSetting } = useStrapiApi()
+const siteSetting = getSiteSetting()
 
 const scrollToSection = (id: string) => {
   const element = document.getElementById(id)
@@ -54,16 +57,16 @@ const scrollToSection = (id: string) => {
           <div class="space-y-2 text-xs text-neutral-300 font-mono">
             <div class="flex items-center gap-2.5">
               <span class="w-5 h-5 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-[#00C978] text-[10px]">📞</span>
-              <a href="tel:025233559" class="hover:text-[#00C978] transition-colors">0-2523-3559, 063-525-4850</a>
+              <a :href="'tel:' + siteSetting.phone.split(',')[0].replace(/[^0-9]/g, '')" class="hover:text-[#00C978] transition-colors">{{ siteSetting.phone }}</a>
             </div>
             <div class="flex items-center gap-2.5">
               <span class="w-5 h-5 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-[#00C978] text-[10px]">✉️</span>
-              <a href="mailto:sales@igenco.co.th" class="hover:text-[#00C978] transition-colors">sales@igenco.co.th</a>
+              <a :href="'mailto:' + siteSetting.email" class="hover:text-[#00C978] transition-colors">{{ siteSetting.email }}</a>
             </div>
             <div class="flex items-center gap-2.5">
               <span class="w-5 h-5 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-[#00C978] text-[10px]">📍</span>
               <span class="text-neutral-400">
-                {{ locale === 'th' ? 'เขตดอนเมือง กรุงเทพมหานคร 10210' : 'Don Mueang, Bangkok 10210, Thailand' }}
+                {{ locale === 'th' ? siteSetting.address_th : siteSetting.address_en }}
               </span>
             </div>
           </div>

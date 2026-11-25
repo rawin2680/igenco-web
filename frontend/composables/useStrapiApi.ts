@@ -1,4 +1,4 @@
-import { useRuntimeConfig } from '#app'
+import { useRuntimeConfig, useState } from '#app'
 import type {
   HeroContent,
   CapabilityItem,
@@ -409,8 +409,46 @@ export const useStrapiApi = () => {
     })
   }
 
+  const getSiteSetting = () => {
+    return useState('igenco_site_setting', () => ({
+      hero_badge: 'NEXT-GEN ENTERPRISE AI ARCHITECTURE',
+      hero_title_th: 'ยกระดับองค์กรสู่อนาคต ด้วยสถาปัตยกรรม AI อัจฉริยะ',
+      hero_title_en: 'Elevating Enterprises with Autonomous AI Architecture',
+      hero_subtitle_th: 'ออกแบบและพัฒนาโซลูชันปัญญาประดิษฐ์ระดับองค์กร ผสานความแม่นยำของข้อมูล ความปลอดภัยสูงสุด และประสบการณ์ดิจิทัลที่ไร้รอยต่อ',
+      hero_subtitle_en: 'Designing enterprise artificial intelligence solutions blending data precision, military-grade security, and seamless digital transformation.',
+      company_name_th: 'บริษัท ไอเจนโก้ จำกัด',
+      company_name_en: 'IGENCO Co., Ltd.',
+      address_th: '89/35 อาคารจูเคี่ยวเล้ง ชั้น 3 ถนนวิภาวดีรังสิต แขวงสนามบิน เขตดอนเมือง กรุงเทพมหานคร 10210',
+      address_en: '89/35 Chu Kiao Leng Bldg., 3rd Fl., Vibhavadi Rangsit Rd., Sanambin, Don Mueang, Bangkok 10210',
+      phone: '0-2523-3559, 0-2523-3560, 063-525-4850',
+      email: 'sales@igenco.co.th',
+      taxId: '0115553003741',
+      officeHours_th: 'จันทร์ - ศุกร์ เวลา 08:30 - 17:30 น.',
+      officeHours_en: 'Mon - Fri, 08:30 - 17:30'
+    }))
+  }
+
+  const refreshSiteSetting = async () => {
+    const state = getSiteSetting()
+    if (useMock) return state.value
+    try {
+      const res = await $fetch<{ data: any }>(`${apiBase}/api/site-setting`)
+      if (res?.data) {
+        state.value = {
+          ...state.value,
+          ...res.data
+        }
+      }
+    } catch (e) {
+      console.warn('Strapi SiteSetting fallback to default:', e)
+    }
+    return state.value
+  }
+
   return {
     getHeroContent,
+    getSiteSetting,
+    refreshSiteSetting,
     getNewsArticles,
     getProductsFromCms,
     getClientPartnersFromCms,

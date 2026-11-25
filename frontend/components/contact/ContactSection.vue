@@ -4,7 +4,8 @@ import { useAppI18n } from '~/composables/useI18n'
 import { useStrapiApi } from '~/composables/useStrapiApi'
 
 const { locale } = useAppI18n()
-const { submitContactInquiry } = useStrapiApi()
+const { submitContactInquiry, getSiteSetting } = useStrapiApi()
+const siteSetting = getSiteSetting()
 
 // สถานะการคัดลอก (Copy Feedback)
 const copiedField = ref<string | null>(null)
@@ -187,7 +188,7 @@ const resetForm = () => {
                   {{ locale === 'th' ? 'เวลาทำการสำนักงาน' : 'Office Hours' }}
                 </h4>
                 <p class="text-[11px] text-mutedSlate leading-relaxed">
-                  {{ locale === 'th' ? 'วันจันทร์ – วันศุกร์ เวลา 08:30 – 17:30 น.' : 'Monday – Friday, 08:30 AM – 05:30 PM (ICT)' }}
+                  {{ locale === 'th' ? siteSetting.officeHours_th : siteSetting.officeHours_en }}
                 </p>
               </div>
             </div>
@@ -260,11 +261,11 @@ const resetForm = () => {
               </div>
               <div class="flex items-center justify-between gap-3 bg-[#F8FAF9] p-3 rounded-2xl border border-forestBlack/5">
                 <span class="font-mono text-xs sm:text-sm font-bold text-[#00875A]">
-                  sales@igenco.co.th
+                  {{ siteSetting.email }}
                 </span>
                 <button
                   type="button"
-                  @click="copyToClipboard('sales@igenco.co.th', 'email')"
+                  @click="copyToClipboard(siteSetting.email, 'email')"
                   class="px-3 py-1 rounded-full text-xs font-semibold bg-white hover:bg-forestBlack/5 text-forestBlack border border-forestBlack/15 transition-all cursor-pointer active:scale-95"
                 >
                   <span v-if="copiedField === 'email'" class="text-[#00875A]">✓ {{ locale === 'th' ? 'คัดลอกแล้ว' : 'Copied' }}</span>
@@ -289,19 +290,17 @@ const resetForm = () => {
                   HEADQUARTERS
                 </div>
                 <h3 class="text-sm sm:text-base font-bold text-forestBlack leading-snug">
-                  {{ locale === 'th' ? 'บริษัท ไอเจนโก้ จำกัด (IGENCO.Co.,Ltd)' : 'IGENCO Co., Ltd.' }}
+                  {{ locale === 'th' ? siteSetting.company_name_th : siteSetting.company_name_en }}
                 </h3>
               </div>
             </div>
 
             <!-- Address Text -->
             <p class="text-xs text-mutedSlate leading-relaxed mb-3">
-              {{ locale === 'th'
-                ? '89/35 อาคารจูเคี่ยวเล้ง ชั้น 3 ถนนวิภาวดีรังสิต แขวงสนามบิน เขตดอนเมือง กรุงเทพมหานคร 10210'
-                : '89/35 Jukieoleng Bldg, 3rd Fl., Vibhavadi Rangsit Rd., Sanambin, Don Mueang, Bangkok 10210, Thailand' }}
+              {{ locale === 'th' ? siteSetting.address_th : siteSetting.address_en }}
             </p>
             <div class="text-[11px] text-mutedSlate/80 font-mono mb-5">
-              {{ locale === 'th' ? 'เลขประจำตัวผู้เสียภาษี : 0115553003741' : 'Tax Identification No. : 0115553003741' }}
+              {{ locale === 'th' ? `เลขประจำตัวผู้เสียภาษี : ${siteSetting.taxId}` : `Tax Identification No. : ${siteSetting.taxId}` }}
             </div>
 
             <!-- Map & Copy Buttons -->

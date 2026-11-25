@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAppI18n } from '~/composables/useI18n'
 import { useAppModal } from '~/composables/useModal'
 import { useStrapiApi } from '~/composables/useStrapiApi'
@@ -24,7 +24,7 @@ export interface FeaturedSlide {
   features: { th: string; en: string }[]
 }
 
-const featuredSlides: FeaturedSlide[] = [
+const featuredSlides = ref<FeaturedSlide[]>([
   {
     id: 'hr-ai',
     numberBadge: '01 / 05 • FLAGSHIP HR & PAYROLL',
@@ -135,27 +135,32 @@ const featuredSlides: FeaturedSlide[] = [
       { th: 'ออกใบประกาศนียบัตรออนไลน์และสรุปสถิติผู้เข้าร่วมงาน', en: 'Automated e-Certificates and live attendee analytics' }
     ]
   }
-]
+])
 
 // Quick Product Selector Icons for the Carousel Dock
-const quickAppShortcuts = [
-  { id: 'hr-ai', index: 0, label: 'HR.ai', iconBg: 'bg-[#0284C7]', iconColor: 'text-white', iconType: 'users' },
-  { id: 'ismartflow', index: 1, label: 'i-SmartFlow', iconBg: 'bg-[#00C978]', iconColor: 'text-forestBlack', iconType: 'document-pen' },
-  { id: 'iserff', index: 2, label: 'I-SERFF', iconBg: 'bg-[#064E3B]', iconColor: 'text-[#00E588]', iconType: 'shield' },
-  { id: 'ifinsoft', index: 3, label: 'i-FINSOFT', iconBg: 'bg-[#0D9488]', iconColor: 'text-white', iconType: 'pie-chart' },
-  { id: 'iregist-igenq', index: 4, label: 'i-Regist / iGenQ', iconBg: 'bg-[#7C3AED]', iconColor: 'text-white', iconType: 'badge-id' }
-]
+const quickAppShortcuts = computed(() =>
+  featuredSlides.value.map((s, idx) => ({
+    id: s.id,
+    index: idx,
+    label: s.title.th.split(' — ')[0],
+    iconBg: s.iconBg,
+    iconColor: s.iconColor,
+    iconType: s.iconType
+  }))
+)
 
 const currentSlideIndex = ref(0)
 const isAutoPlay = ref(true)
 let autoPlayTimer: any = null
 
 const nextSlide = () => {
-  currentSlideIndex.value = (currentSlideIndex.value + 1) % featuredSlides.length
+  if (featuredSlides.value.length === 0) return
+  currentSlideIndex.value = (currentSlideIndex.value + 1) % featuredSlides.value.length
 }
 
 const prevSlide = () => {
-  currentSlideIndex.value = (currentSlideIndex.value - 1 + featuredSlides.length) % featuredSlides.length
+  if (featuredSlides.value.length === 0) return
+  currentSlideIndex.value = (currentSlideIndex.value - 1 + featuredSlides.value.length) % featuredSlides.value.length
 }
 
 const goToSlide = (idx: number) => {
@@ -459,6 +464,51 @@ onMounted(async () => {
       'code': { iconBg: 'bg-[#F1F5F9] border border-[#E2E8F0]', iconColor: 'text-[#334155]' },
       'user-tech': { iconBg: 'bg-[#DCFCE7] border border-[#BBF7D0]', iconColor: 'text-[#15803D]' }
     }
+    const featured = cmsProducts
+      .filter((p: any) => p.isFeatured)
+      .sort((a: any, b: any) => (a.featuredOrder || 99) - (b.featuredOrder || 99))
+
+    if (featured.length > 0) {
+      const slideIconStyles: Record<string, { iconBg: string; iconColor: string }> = {
+        'users': { iconBg: 'bg-gradient-to-br from-[#0284C7] to-[#0369A1]', iconColor: 'text-white' },
+        'document-pen': { iconBg: 'bg-gradient-to-br from-[#00C978] to-[#059669]', iconColor: 'text-white' },
+        'shield': { iconBg: 'bg-gradient-to-br from-[#064E3B] to-[#032B20]', iconColor: 'text-[#00E588]' },
+        'pie-chart': { iconBg: 'bg-gradient-to-br from-[#0D9488] to-[#0F766E]', iconColor: 'text-white' },
+        'badge-id': { iconBg: 'bg-gradient-to-br from-[#7C3AED] to-[#5B21B6]', iconColor: 'text-white' }
+      }
+      const totalStr = String(featured.length).padStart(2, '0')
+      featuredSlides.value = featured.map((p: any, i: number) => {
+        const sStyle = slideIconStyles[p.iconType || 'document-pen'] || slideIconStyles['document-pen']
+        const numStr = String(i + 1).padStart(2, '0')
+        const featuresTh = Array.isArray(p.features_th) ? p.features_th : []
+        const featuresEn = Array.isArray(p.features_en) ? p.features_en : featuresTh
+        return {
+          id: p.slug || String(p.id),
+          numberBadge: `${numStr} / ${totalStr} • ${(p.tag || 'ENTERPRISE').toUpperCase()}`,
+          awardBadge: p.awardBadge || '⭐ Enterprise Solution',
+          iconBg: sStyle.iconBg,
+          iconColor: sStyle.iconColor,
+          iconType: p.iconType || 'document-pen',
+          title: {
+            th: p.subtitle_th ? `${p.title} — ${p.subtitle_th}` : p.title,
+            en: p.subtitle_en ? `${p.title} — ${p.subtitle_en}` : p.title
+          },
+          description: {
+            th: p.description_th || '',
+            en: p.description_en || p.description_th || ''
+          },
+          image: p.resolvedImage || 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1000&q=80',
+          features: featuresTh.map((ft: string, idx: number) => ({
+            th: ft,
+            en: featuresEn[idx] || ft
+          }))
+        }
+      })
+      if (currentSlideIndex.value >= featuredSlides.value.length) {
+        currentSlideIndex.value = 0
+      }
+    }
+
     solutionsList.value = cmsProducts.map((p: any) => {
       const style = iconStyles[p.iconType || 'document-pen'] || iconStyles['document-pen']
       return {
