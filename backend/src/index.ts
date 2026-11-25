@@ -564,7 +564,146 @@ export default {
         }
       }
 
-      strapi.log.info('✅ IGENCO Bootstrap: Public API Permissions, Roles (sysadmin/editor), and Full Seed Data ready!');
+      // ----------------------------------------------------------------------
+      // 7. ตั้งค่าป้ายชื่อฟิลด์ภาษาไทย (Friendly Labels) และคอลัมน์ใน Content Manager
+      //    เพื่อให้ Editor เข้ามาอัปเดตข่าวสารและข้อมูลเบื้องต้นได้ง่ายและถูกส่วน
+      // ----------------------------------------------------------------------
+      const friendlyConfigs: Record<string, {
+        mainField?: string;
+        listColumns?: string[];
+        labels: Record<string, { label: string; description?: string }>;
+      }> = {
+        'api::site-setting.site-setting': {
+          labels: {
+            hero_badge: { label: 'ป้ายข้อความบนสุดหน้าแรก (Eyebrow)', description: 'แสดงเหนือหัวข้อใหญ่หน้าแรก' },
+            hero_title_th: { label: 'พาดหัวใหญ่หน้าแรก (ภาษาไทย)', description: 'ข้อความต้อนรับหลักหน้าแรก' },
+            hero_title_en: { label: 'พาดหัวใหญ่หน้าแรก (English)' },
+            hero_subtitle_th: { label: 'คำอธิบายใต้พาดหัวหน้าแรก (ภาษาไทย)' },
+            hero_subtitle_en: { label: 'คำอธิบายใต้พาดหัวหน้าแรก (English)' },
+            company_name_th: { label: 'ชื่อบริษัท (ภาษาไทย)' },
+            company_name_en: { label: 'ชื่อบริษัท (English)' },
+            address_th: { label: 'ที่อยู่สำนักงานใหญ่ (ภาษาไทย)' },
+            address_en: { label: 'ที่อยู่สำนักงานใหญ่ (English)' },
+            phone: { label: 'เบอร์โทรศัพท์ติดต่อ' },
+            email: { label: 'อีเมลติดต่อหลัก' },
+            taxId: { label: 'เลขประจำตัวผู้เสียภาษี' },
+            officeHours_th: { label: 'เวลาทำการ (ภาษาไทย)' },
+            officeHours_en: { label: 'เวลาทำการ (English)' },
+          },
+        },
+        'api::news-article.news-article': {
+          mainField: 'title_th',
+          listColumns: ['id', 'title_th', 'category', 'date_th', 'updatedAt'],
+          labels: {
+            title_th: { label: 'หัวข้อข่าว (ภาษาไทย)' },
+            title_en: { label: 'หัวข้อข่าว (English)' },
+            subtitle_th: { label: 'หัวข้อย่อย / สรุปสั้น (ภาษาไทย)' },
+            subtitle_en: { label: 'หัวข้อย่อย / สรุปสั้น (English)' },
+            body_th: { label: 'เนื้อหาย่อ — แสดงบนการ์ดหน้าเว็บ (ภาษาไทย)' },
+            body_en: { label: 'เนื้อหาย่อ — แสดงบนการ์ดหน้าเว็บ (English)' },
+            fullContent_th: { label: 'เนื้อหาฉบับเต็ม — แสดงเมื่อกดอ่านเพิ่มเติม (ไทย)' },
+            fullContent_en: { label: 'เนื้อหาฉบับเต็ม — แสดงเมื่อกดอ่านเพิ่มเติม (English)' },
+            category: { label: 'หมวดหมู่ข่าว' },
+            tag: { label: 'ป้ายแท็กมุมรูปภาพ' },
+            readTime: { label: 'เวลาในการอ่าน (เช่น 1 min)' },
+            date_th: { label: 'วันที่แสดงบนข่าว (ภาษาไทย)' },
+            date_en: { label: 'วันที่แสดงบนข่าว (English)' },
+            image: { label: 'อัปโหลดรูปภาพหน้าปกข่าว (แนะนำ 16:9)' },
+            imageUrl: { label: 'ลิงก์รูปภาพ (กรณีไม่ใช้อัปโหลด)' },
+            externalLink: { label: 'ลิงก์อ่านข่าวภายนอก (ถ้ามี)' },
+          },
+        },
+        'api::product.product': {
+          mainField: 'title',
+          listColumns: ['id', 'title', 'tag', 'isFeatured', 'featuredOrder'],
+          labels: {
+            title: { label: 'ชื่อผลิตภัณฑ์ / ระบบ' },
+            slug: { label: 'รหัสอ้างอิง URL (Slug)' },
+            subtitle_th: { label: 'คำโปรยสีเขียวใต้ชื่อ (ภาษาไทย)' },
+            subtitle_en: { label: 'คำโปรยใต้ชื่อ (English)' },
+            description_th: { label: 'คำอธิบายผลิตภัณฑ์ (ภาษาไทย)' },
+            description_en: { label: 'คำอธิบายผลิตภัณฑ์ (English)' },
+            tag: { label: 'ป้ายหมวดหมู่มุมบนขวา' },
+            tags: { label: 'แท็กจุดเด่น 3 รายการ (JSON Array)' },
+            features_th: { label: 'จุดเด่น / ฟีเจอร์ (ภาษาไทย - JSON)' },
+            features_en: { label: 'จุดเด่น / ฟีเจอร์ (English - JSON)' },
+            isFeatured: { label: 'แสดงในสไลด์ไฮไลต์ด้านบน?' },
+            featuredOrder: { label: 'ลำดับในสไลด์ไฮไลต์ (1-5)' },
+            awardBadge: { label: 'ป้ายรางวัล / มาตรฐาน' },
+            image: { label: 'อัปโหลดรูปภาพสไลด์' },
+            imageUrl: { label: 'ลิงก์รูปภาพ (กรณีไม่ใช้อัปโหลด)' },
+            iconType: { label: 'ชนิดไอคอนประจำระบบ' },
+          },
+        },
+        'api::client-partner.client-partner': {
+          mainField: 'title_th',
+          listColumns: ['id', 'title_th', 'categoryKey', 'solution_th'],
+          labels: {
+            categoryKey: { label: 'กลุ่มประเภท (gov=ภาครัฐ, private=เอกชน, tech=พันธมิตร)' },
+            categoryName_th: { label: 'ชื่อกลุ่ม (ภาษาไทย)' },
+            categoryName_en: { label: 'ชื่อกลุ่ม (English)' },
+            title_th: { label: 'ชื่อองค์กร / ลูกค้า (ภาษาไทย)' },
+            title_en: { label: 'ชื่อองค์กร / ลูกค้า (English)' },
+            subtitle_th: { label: 'ระบบที่ใช้งาน (ภาษาไทย)' },
+            subtitle_en: { label: 'ระบบที่ใช้งาน (English)' },
+            description_th: { label: 'รายละเอียดความร่วมมือ (ภาษาไทย)' },
+            description_en: { label: 'รายละเอียดความร่วมมือ (English)' },
+            solution_th: { label: 'ชื่อโซลูชันที่ติดตั้ง (ไทย)' },
+            solution_en: { label: 'ชื่อโซลูชันที่ติดตั้ง (English)' },
+            stats_th: { label: 'ตัวเลขความสำเร็จ (ไทย)' },
+            stats_en: { label: 'ตัวเลขความสำเร็จ (English)' },
+          },
+        },
+        'api::contact-inquiry.contact-inquiry': {
+          mainField: 'contactName',
+          listColumns: ['id', 'contactName', 'organization', 'interestedProduct', 'status', 'createdAt'],
+          labels: {
+            contactName: { label: 'ชื่อผู้ติดต่อ' },
+            organization: { label: 'บริษัท / หน่วยงาน' },
+            phone: { label: 'เบอร์โทรศัพท์' },
+            email: { label: 'อีเมล' },
+            subject: { label: 'หัวข้อที่ติดต่อ' },
+            interestedProduct: { label: 'ผลิตภัณฑ์ที่สนใจ' },
+            details: { label: 'รายละเอียดเพิ่มเติม' },
+            status: { label: 'สถานะการติดตาม (new / contacted / closed)' },
+          },
+        },
+      };
+
+      for (const [uid, cfg] of Object.entries(friendlyConfigs)) {
+        const key = `plugin_content_manager_configuration_content_types::${uid}`;
+        const row = await strapi.db.query('strapi::core-store').findOne({ where: { key } });
+        if (row?.value) {
+          const parsed = typeof row.value === 'string' ? JSON.parse(row.value) : row.value;
+          if (cfg.mainField) {
+            parsed.settings = { ...parsed.settings, mainField: cfg.mainField };
+          }
+          if (cfg.listColumns && parsed.layouts) {
+            parsed.layouts.list = cfg.listColumns;
+          }
+          if (parsed.metadatas) {
+            for (const [field, meta] of Object.entries(cfg.labels)) {
+              if (parsed.metadatas[field]) {
+                if (parsed.metadatas[field].edit) {
+                  parsed.metadatas[field].edit.label = meta.label;
+                  if (meta.description) {
+                    parsed.metadatas[field].edit.description = meta.description;
+                  }
+                }
+                if (parsed.metadatas[field].list) {
+                  parsed.metadatas[field].list.label = meta.label;
+                }
+              }
+            }
+          }
+          await strapi.db.query('strapi::core-store').update({
+            where: { id: row.id },
+            data: { value: JSON.stringify(parsed) },
+          });
+        }
+      }
+
+      strapi.log.info('✅ IGENCO Bootstrap: Friendly Thai Admin Menus, Labels, Permissions, and Seed Data ready!');
     } catch (err) {
       strapi.log.error('❌ IGENCO Bootstrap Error:', err);
     }

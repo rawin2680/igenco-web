@@ -4,7 +4,7 @@
   "info": {
     "singularName": "contact-inquiry",
     "pluralName": "contact-inquiries",
-    "displayName": "Contact Inquiry (ข้อมูลติดต่อและนัด Demo)",
+    "displayName": "5. กล่องข้อความติดต่อ / นัด Demo (Inbox)",
     "description": "รายการผู้ติดต่อขอใบเสนอราคาและนัดหมายสาธิตระบบจากหน้าเว็บ"
   },
   "options": {

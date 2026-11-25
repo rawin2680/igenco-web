@@ -4,7 +4,7 @@
   "info": {
     "singularName": "news-article",
     "pluralName": "news-articles",
-    "displayName": "News Article (ข่าวสารและกิจกรรม)",
+    "displayName": "2. ข่าวสารและกิจกรรม (News)",
     "description": "ข่าวสารประชาสัมพันธ์ บทความ และกิจกรรมองค์กร (รองรับ TH/EN)"
   },
   "options": {

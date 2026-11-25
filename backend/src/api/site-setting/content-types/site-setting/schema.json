@@ -4,7 +4,7 @@
   "info": {
     "singularName": "site-setting",
     "pluralName": "site-settings",
-    "displayName": "Site Setting (ข้อมูลเบื้องต้นบริษัทและ Hero)",
+    "displayName": "1. หน้าแรก & ข้อมูลบริษัท (Site Setting)",
     "description": "แก้ไขข้อความหน้าแรก ที่อยู่ เบอร์โทร อีเมล และข้อมูลเบื้องต้นขององค์กร"
   },
   "options": {
