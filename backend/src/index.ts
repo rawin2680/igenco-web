@@ -132,13 +132,30 @@ export default {
       const edRole = await strapi.db.query('plugin::users-permissions.role').findOne({ where: { type: 'editor' } });
       const userService = strapi.plugin('users-permissions').service('user');
 
-      if (sysRole) {
-        const sysUser = await strapi.db.query('plugin::users-permissions.user').findOne({ where: { email: 'sysadmin@igenco.co.th' } });
+      // รหัสผ่านอ่านจาก env (SEED_SYSADMIN_PASSWORD / SEED_EDITOR_PASSWORD)
+      // บน production ถ้าไม่ได้ตั้งค่า จะไม่สร้างบัญชีนั้น เพื่อไม่ให้มีรหัสผ่านที่เดาได้
+      const isProd = process.env.NODE_ENV === 'production';
+      const seedPassword = (envName: string, devDefault: string) => {
+        const value = process.env[envName];
+        if (value) return value;
+        if (isProd) {
+          strapi.log.warn(`IGENCO Bootstrap: ${envName} is not set, skipping this seed account.`);
+          return null;
+        }
+        return devDefault;
+      };
+      const sysEmail = process.env.SEED_SYSADMIN_EMAIL || 'sysadmin@igenco.co.th';
+      const edEmail = process.env.SEED_EDITOR_EMAIL || 'editor@igenco.co.th';
+      const sysPassword = seedPassword('SEED_SYSADMIN_PASSWORD', 'Igenco@2026');
+      const edPassword = seedPassword('SEED_EDITOR_PASSWORD', 'Editor@2026');
+
+      if (sysRole && sysPassword) {
+        const sysUser = await strapi.db.query('plugin::users-permissions.user').findOne({ where: { email: sysEmail } });
         if (!sysUser) {
           await userService.add({
             username: 'sysadmin',
-            email: 'sysadmin@igenco.co.th',
-            password: 'Igenco@2026',
+            email: sysEmail,
+            password: sysPassword,
             confirmed: true,
             blocked: false,
             role: sysRole.id,
@@ -146,13 +163,13 @@ export default {
           });
         }
       }
-      if (edRole) {
-        const edUser = await strapi.db.query('plugin::users-permissions.user').findOne({ where: { email: 'editor@igenco.co.th' } });
+      if (edRole && edPassword) {
+        const edUser = await strapi.db.query('plugin::users-permissions.user').findOne({ where: { email: edEmail } });
         if (!edUser) {
           await userService.add({
             username: 'editor',
-            email: 'editor@igenco.co.th',
-            password: 'Editor@2026',
+            email: edEmail,
+            password: edPassword,
             confirmed: true,
             blocked: false,
             role: edRole.id,

@@ -10,7 +10,7 @@ WORKDIR /app
 # 2. Dependencies Stage
 FROM base AS dependencies
 COPY package.json package-lock.json* ./
-RUN npm install
+RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
 
 # 3. Development Stage (used by docker-compose)
 FROM base AS development
@@ -34,7 +34,10 @@ ENV NODE_ENV=production
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/package.json ./package.json
+# tsconfig.json tells `strapi start` this is a TypeScript app, so it loads the compiled code in dist/
+COPY --from=build /app/tsconfig.json ./tsconfig.json
 COPY --from=build /app/config ./config
 COPY --from=build /app/public ./public
+RUN mkdir -p public/uploads
 EXPOSE 1337
 CMD ["npm", "run", "start"]
