@@ -5,6 +5,8 @@ import RequestDemoModal from '~/components/modal/RequestDemoModal.vue'
 import AboutModal from '~/components/modal/AboutModal.vue'
 import NewsModal from '~/components/modal/NewsModal.vue'
 import UserGroupsModal from '~/components/modal/UserGroupsModal.vue'
+const route = useRoute()
+const isAdmin = computed(() => route.path.startsWith('/admin'))
 </script>
 
 <template>
@@ -20,11 +22,13 @@ import UserGroupsModal from '~/components/modal/UserGroupsModal.vue'
     <NuxtPage />
 
     <!-- Global Floating Widgets & Modals -->
-    <AiConciergeDrawer />
-    <CommandPalette />
-    <RequestDemoModal />
-    <AboutModal />
-    <NewsModal />
-    <UserGroupsModal />
+    <template v-if="!isAdmin">
+      <AiConciergeDrawer />
+      <CommandPalette />
+      <RequestDemoModal />
+      <AboutModal />
+      <NewsModal />
+      <UserGroupsModal />
+    </template>
   </div>
 </template>
