@@ -61,13 +61,103 @@ export default {
       ];
 
       for (const r of customApiRoles) {
-        const exists = await strapi.db
+        let roleRecord = await strapi.db
           .query('plugin::users-permissions.role')
           .findOne({ where: { type: r.type } });
-        if (!exists) {
-          await strapi.db
+        if (!roleRecord) {
+          roleRecord = await strapi.db
             .query('plugin::users-permissions.role')
             .create({ data: r });
+        }
+
+        // กำหนดสิทธิ์ API ให้ sysadmin และ editor
+        const roleActions = r.type === 'sysadmin'
+          ? [
+              'api::news-article.news-article.find',
+              'api::news-article.news-article.findOne',
+              'api::news-article.news-article.create',
+              'api::news-article.news-article.update',
+              'api::news-article.news-article.delete',
+              'api::product.product.find',
+              'api::product.product.findOne',
+              'api::product.product.create',
+              'api::product.product.update',
+              'api::product.product.delete',
+              'api::client-partner.client-partner.find',
+              'api::client-partner.client-partner.findOne',
+              'api::client-partner.client-partner.create',
+              'api::client-partner.client-partner.update',
+              'api::client-partner.client-partner.delete',
+              'api::site-setting.site-setting.find',
+              'api::site-setting.site-setting.update',
+              'api::contact-inquiry.contact-inquiry.find',
+              'api::contact-inquiry.contact-inquiry.findOne',
+              'api::contact-inquiry.contact-inquiry.update',
+              'api::contact-inquiry.contact-inquiry.delete',
+              'plugin::users-permissions.user.find',
+              'plugin::users-permissions.user.findOne',
+              'plugin::users-permissions.user.create',
+              'plugin::users-permissions.user.update',
+              'plugin::users-permissions.user.me',
+              'plugin::users-permissions.role.find',
+            ]
+          : [
+              'api::news-article.news-article.find',
+              'api::news-article.news-article.findOne',
+              'api::news-article.news-article.create',
+              'api::news-article.news-article.update',
+              'api::site-setting.site-setting.find',
+              'api::site-setting.site-setting.update',
+              'api::product.product.find',
+              'api::product.product.findOne',
+              'api::client-partner.client-partner.find',
+              'api::contact-inquiry.contact-inquiry.find',
+              'plugin::users-permissions.user.me',
+            ];
+
+        for (const action of roleActions) {
+          const permExists = await strapi.db
+            .query('plugin::users-permissions.permission')
+            .findOne({ where: { action, role: roleRecord.id } });
+          if (!permExists) {
+            await strapi.db
+              .query('plugin::users-permissions.permission')
+              .create({ data: { action, role: roleRecord.id } });
+          }
+        }
+      }
+
+      // สร้างบัญชีผู้ใช้งานตัวอย่างสำหรับเข้าหน้า Admin Portal (/admin)
+      const sysRole = await strapi.db.query('plugin::users-permissions.role').findOne({ where: { type: 'sysadmin' } });
+      const edRole = await strapi.db.query('plugin::users-permissions.role').findOne({ where: { type: 'editor' } });
+      const userService = strapi.plugin('users-permissions').service('user');
+
+      if (sysRole) {
+        const sysUser = await strapi.db.query('plugin::users-permissions.user').findOne({ where: { email: 'sysadmin@igenco.co.th' } });
+        if (!sysUser) {
+          await userService.add({
+            username: 'sysadmin',
+            email: 'sysadmin@igenco.co.th',
+            password: 'Igenco@2026',
+            confirmed: true,
+            blocked: false,
+            role: sysRole.id,
+            provider: 'local',
+          });
+        }
+      }
+      if (edRole) {
+        const edUser = await strapi.db.query('plugin::users-permissions.user').findOne({ where: { email: 'editor@igenco.co.th' } });
+        if (!edUser) {
+          await userService.add({
+            username: 'editor',
+            email: 'editor@igenco.co.th',
+            password: 'Editor@2026',
+            confirmed: true,
+            blocked: false,
+            role: edRole.id,
+            provider: 'local',
+          });
         }
       }
 
