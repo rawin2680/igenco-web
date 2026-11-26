@@ -17,6 +17,7 @@ const email = ref('')
 const password = ref('')
 const loginError = ref('')
 const loggingIn = ref(false)
+const showPassword = ref(false)
 const submitLogin = async () => {
   loggingIn.value = true
   loginError.value = ''
@@ -126,11 +127,21 @@ const doLogout = () => {
             <input v-model="email" type="email" required autocomplete="username" placeholder="name@igenco.co.th"
               class="w-full px-3.5 py-2.5 rounded-lg bg-white ring-1 ring-black/[0.12] text-sm focus:outline-none focus:ring-2 focus:ring-[#00C978]" />
           </label>
-          <label class="block mt-4">
-            <span class="block text-xs font-semibold mb-1.5">รหัสผ่าน</span>
-            <input v-model="password" type="password" required autocomplete="current-password"
-              class="w-full px-3.5 py-2.5 rounded-lg bg-white ring-1 ring-black/[0.12] text-sm focus:outline-none focus:ring-2 focus:ring-[#00C978]" />
-          </label>
+          <div class="mt-4">
+            <label for="admin-password" class="block text-xs font-semibold mb-1.5">รหัสผ่าน</label>
+            <div class="relative">
+              <input id="admin-password" v-model="password" :type="showPassword ? 'text' : 'password'" required autocomplete="current-password"
+                class="w-full pl-3.5 pr-11 py-2.5 rounded-lg bg-white ring-1 ring-black/[0.12] text-sm focus:outline-none focus:ring-2 focus:ring-[#00C978]" />
+              <button
+                type="button"
+                class="absolute inset-y-0 right-0 px-3 flex items-center text-mutedSlate hover:text-forestBlack"
+                :aria-label="showPassword ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน'"
+                :title="showPassword ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน'"
+                :aria-pressed="showPassword"
+                @click="showPassword = !showPassword"
+              ><AdminIcon :name="showPassword ? 'eye-off' : 'eye'" :size="18" /></button>
+            </div>
+          </div>
           <p v-if="loginError" class="mt-3 text-[13px] text-red-600">{{ loginError }}</p>
           <button type="submit" :disabled="loggingIn"
             class="mt-6 w-full py-2.5 rounded-lg bg-[#09140E] hover:bg-[#13241A] disabled:opacity-60 text-white text-sm font-semibold">
