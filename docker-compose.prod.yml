@@ -1,0 +1,68 @@
+# ==============================================================================
+# IGENCO AI — Production Backend Stack (Strapi v5 + PostgreSQL 16)
+# สำหรับรันบน Server / VPS ของคุณเอง:
+#   docker compose -f docker-compose.prod.yml up -d --build
+# ==============================================================================
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: igenco_postgres_prod
+    restart: unless-stopped
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    environment:
+      POSTGRES_DB: ${DB_NAME:-igenco_db}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres_secure_pass}
+    volumes:
+      - pgdata_prod:/var/lib/postgresql/data
+    networks:
+      - igenco_prod_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-igenco_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    container_name: igenco_backend_prod
+    restart: unless-stopped
+    ports:
+      - "${STRAPI_PORT:-1337}:1337"
+    environment:
+      - NODE_ENV=production
+      - HOST=0.0.0.0
+      - PORT=1337
+      - FRONTEND_URL=${FRONTEND_URL:-https://igenco-demo2.vercel.app}
+      - APP_KEYS=${STRAPI_APP_KEYS:-igencoAppKey1,igencoAppKey2}
+      - API_TOKEN_SALT=${STRAPI_API_TOKEN_SALT:-igencoApiTokenSalt32CharactersMin}
+      - ADMIN_JWT_SECRET=${STRAPI_ADMIN_JWT_SECRET:-igencoAdminJwtSecretKey32CharsMin}
+      - TRANSFER_TOKEN_SALT=${STRAPI_TRANSFER_TOKEN_SALT:-igencoTransferTokenSalt32CharsMin}
+      - JWT_SECRET=${STRAPI_JWT_SECRET:-igencoJwtSecretKey32CharactersMin}
+      - DATABASE_CLIENT=postgres
+      - DATABASE_HOST=postgres
+      - DATABASE_PORT=5432
+      - DATABASE_NAME=${DB_NAME:-igenco_db}
+      - DATABASE_USERNAME=${DB_USER:-postgres}
+      - DATABASE_PASSWORD=${DB_PASSWORD:-postgres_secure_pass}
+      - DATABASE_SSL=${DB_SSL:-false}
+    volumes:
+      - ./backend/public/uploads:/app/public/uploads
+    networks:
+      - igenco_prod_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+networks:
+  igenco_prod_network:
+    driver: bridge
+
+volumes:
+  pgdata_prod:
+    driver: local
