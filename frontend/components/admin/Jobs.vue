@@ -2,7 +2,17 @@
 import { JOB_STATUSES, timeAgo, formatDate, type JobStatus } from '~/composables/useAdminApi'
 
 const props = defineProps<{ search: string }>()
-const { jobs, isSysadmin, setJobStatus, deleteJob } = useAdminApi()
+const { jobs, spamJobs, isSysadmin, setJobStatus, deleteJob, setSpam, deleteSpamAll } = useAdminApi()
+const showSpam = ref(false)
+const confirmClearSpam = ref(false)
+const spamRows = computed(() => spamJobs.value.filter(matches))
+const toggleSpam = async (j: any, val: boolean) => {
+  if (await setSpam(j, val)) selected.value = null
+}
+const doClearSpam = async () => {
+  confirmClearSpam.value = false
+  await deleteSpamAll()
+}
 
 const view = ref<'board' | 'list'>('board')
 const statusFilter = ref<'all' | JobStatus>('all')
@@ -50,7 +60,8 @@ const doDelete = async () => {
   <div class="space-y-4">
     <!-- Toolbar -->
     <div class="flex flex-wrap items-center gap-2">
-      <div v-if="view === 'list'" class="flex flex-wrap gap-1.5">
+      <p v-if="showSpam" class="text-[13px] text-mutedSlate">ข้อความที่ระบบกรองไว้ ไม่นับรวมในงาน ตรวจดูแล้วกด “ไม่ใช่สแปม” ถ้าเป็นลูกค้าจริง</p>
+      <div v-else-if="view === 'list'" class="flex flex-wrap gap-1.5">
         <button
           v-for="f in [{ key: 'all', label: 'ทั้งหมด' }, ...JOB_STATUSES]"
           :key="f.key"
@@ -66,7 +77,16 @@ const doDelete = async () => {
         <template v-if="isSysadmin">ลากการ์ดไปคอลัมน์อื่นเพื่อเปลี่ยนสถานะ หรือคลิกเพื่อดูรายละเอียด</template>
         <template v-else>คลิกการ์ดเพื่อดูรายละเอียด</template>
       </p>
-      <div class="ml-auto inline-flex rounded-lg bg-white p-0.5 ring-1 ring-black/[0.06]">
+      <button
+        class="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium ring-1 transition"
+        :class="showSpam ? 'bg-red-600 text-white ring-red-600' : 'bg-white text-mutedSlate ring-black/[0.06] hover:text-red-600'"
+        :title="'ข้อความที่ระบบกรองว่าน่าจะเป็นสแปม'"
+        @click="showSpam = !showSpam"
+      >
+        <AdminIcon name="lock" :size="14" /> สแปม
+        <span class="opacity-70">{{ spamJobs.length }}</span>
+      </button>
+      <div v-if="!showSpam" class="inline-flex rounded-lg bg-white p-0.5 ring-1 ring-black/[0.06]">
         <button
           class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[13px] font-medium"
           :class="view === 'board' ? 'bg-[#E8F8F2] text-[#00875A]' : 'text-mutedSlate'"
@@ -80,8 +100,31 @@ const doDelete = async () => {
       </div>
     </div>
 
+    <!-- Spam folder -->
+    <div v-if="showSpam" class="bg-white rounded-2xl ring-1 ring-black/[0.06] overflow-hidden">
+      <div class="flex items-center gap-2 px-5 py-3 border-b border-black/[0.06] bg-[#FFF8F8]">
+        <span class="text-[13px] font-semibold text-red-700">กล่องสแปม</span>
+        <span class="text-xs text-mutedSlate">{{ spamRows.length }} รายการ</span>
+        <button v-if="isSysadmin && spamJobs.length" class="ml-auto px-3 py-1.5 rounded-lg text-[12px] font-medium text-red-600 hover:bg-red-50 flex items-center gap-1" @click="confirmClearSpam = true">
+          <AdminIcon name="trash" :size="14" /> ลบสแปมทั้งหมด
+        </button>
+      </div>
+      <div v-for="j in spamRows" :key="j.documentId || j.id" class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 px-5 py-3.5 border-b border-black/[0.04] last:border-0">
+        <button class="min-w-0 flex-1 text-left" @click="selected = j">
+          <div class="text-sm font-semibold truncate">{{ j.contactName }} <span class="font-normal text-mutedSlate">· {{ j.email }}</span></div>
+          <div class="text-xs text-mutedSlate truncate">{{ j.details || j.subject || '-' }}</div>
+          <div v-if="j.spamReason" class="mt-1 text-[11px] text-red-600">เหตุผล: {{ j.spamReason }}</div>
+        </button>
+        <span class="text-[11px] text-mutedSlate whitespace-nowrap">{{ timeAgo(j.createdAt) }}</span>
+        <button v-if="isSysadmin" class="px-3 py-1.5 rounded-lg text-[12px] font-semibold bg-[#E8F8F2] text-[#00875A] hover:bg-[#d6f3e8] whitespace-nowrap" @click="toggleSpam(j, false)">
+          ไม่ใช่สแปม
+        </button>
+      </div>
+      <div v-if="!spamRows.length" class="py-14 text-center text-sm text-mutedSlate">ไม่มีข้อความสแปม 🎉</div>
+    </div>
+
     <!-- Board view -->
-    <div v-if="view === 'board'" class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <div v-else-if="view === 'board'" class="grid grid-cols-1 lg:grid-cols-3 gap-4">
       <section
         v-for="col in JOB_STATUSES"
         :key="col.key"
@@ -166,6 +209,9 @@ const doDelete = async () => {
     <!-- Detail drawer -->
     <AdminDrawer :open="!!selected" :title="selected?.contactName" :subtitle="selected?.organization" @close="selected = null">
       <div v-if="selected" class="space-y-6">
+        <div v-if="selected.isSpam" class="p-3 rounded-xl bg-red-50 ring-1 ring-red-200 text-[13px] text-red-700">
+          <b>ระบบกรองว่าเป็นสแปม</b><span v-if="selected.spamReason"> · {{ selected.spamReason }}</span>
+        </div>
         <!-- Status stepper -->
         <div>
           <div class="text-xs font-semibold text-mutedSlate mb-2">สถานะงาน</div>
@@ -214,6 +260,9 @@ const doDelete = async () => {
           <button v-if="isSysadmin" class="px-3 py-2 rounded-lg text-[13px] font-medium text-red-600 hover:bg-red-50 flex items-center gap-1.5" @click="confirmDelete = true">
             <AdminIcon name="trash" :size="15" /> ลบงาน
           </button>
+          <button v-if="isSysadmin" class="px-3 py-2 rounded-lg text-[13px] font-medium text-mutedSlate hover:bg-black/[0.04]" @click="toggleSpam(selected, !selected.isSpam)">
+            {{ selected.isSpam ? 'ไม่ใช่สแปม' : 'เป็นสแปม' }}
+          </button>
           <a :href="`mailto:${selected.email}?subject=${encodeURIComponent('IGENCO: ' + (selected.subject || selected.interestedProduct || 'ติดต่อกลับ'))}`"
              class="ml-auto px-4 py-2 rounded-lg bg-[#00C978] hover:bg-[#00B36B] text-forestBlack text-[13px] font-semibold flex items-center gap-1.5">
             <AdminIcon name="mail" :size="15" /> ตอบกลับทางอีเมล
@@ -229,6 +278,14 @@ const doDelete = async () => {
       confirm-label="ลบถาวร"
       @cancel="confirmDelete = false"
       @confirm="doDelete"
+    />
+    <AdminConfirm
+      :open="confirmClearSpam"
+      title="ลบสแปมทั้งหมด?"
+      :message="`ข้อความสแปม ${spamJobs.length} รายการจะถูกลบถาวร`"
+      confirm-label="ลบทั้งหมด"
+      @cancel="confirmClearSpam = false"
+      @confirm="doClearSpam"
     />
   </div>
 </template>

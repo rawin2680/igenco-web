@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useAppModal } from '~/composables/useModal'
 import { useAppI18n } from '~/composables/useI18n'
 import { useStrapiApi } from '~/composables/useStrapiApi'
@@ -16,6 +16,11 @@ const form = ref<DemoLeadForm>({
   industry: 'Manufacturing'
 })
 
+// Anti-spam: honeypot + time the modal was opened
+const honeypot = ref('')
+const startedAt = ref(Date.now())
+watch(isDemoModalOpen, (open) => { if (open) { startedAt.value = Date.now(); honeypot.value = '' } }, { immediate: true })
+
 const isSubmitting = ref(false)
 const isSubmitted = ref(false)
 const errorMessage = ref('')
@@ -25,7 +30,7 @@ const handleSubmit = async () => {
   errorMessage.value = ''
   
   try {
-    const res = await submitDemoLead(form.value)
+    const res = await submitDemoLead(form.value, { startedAt: startedAt.value, honeypot: honeypot.value })
     if (res.success) {
       isSubmitted.value = true
     } else {
@@ -87,9 +92,13 @@ const resetAndClose = () => {
         @submit.prevent="handleSubmit"
         class="space-y-4"
       >
+        <div aria-hidden="true" style="position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden">
+          <label>Website <input v-model="honeypot" type="text" name="website" tabindex="-1" autocomplete="off" /></label>
+        </div>
         <div>
           <input
             v-model="form.fullName"
+            maxlength="100"
             required
             type="text"
             :placeholder="locale === 'th' ? 'ชื่อ - นามสกุล' : 'Full Name'"
@@ -100,6 +109,7 @@ const resetAndClose = () => {
         <div>
           <input
             v-model="form.workEmail"
+            maxlength="254"
             required
             type="email"
             :placeholder="locale === 'th' ? 'อีเมลองค์กร (Work Email)' : 'Corporate Work Email'"
@@ -110,6 +120,7 @@ const resetAndClose = () => {
         <div>
           <input
             v-model="form.companyName"
+            maxlength="150"
             required
             type="text"
             :placeholder="locale === 'th' ? 'ชื่อบริษัท / องค์กร' : 'Company / Organization Name'"

@@ -20,6 +20,7 @@ export const useAdminApi = () => {
   const toast = useState<{ msg: string; kind: 'ok' | 'err' } | null>('adm-toast', () => null)
 
   const jobs = useState<any[]>('adm-jobs', () => [])
+  const spamJobs = useState<any[]>('adm-spam', () => [])
   const products = useState<any[]>('adm-products', () => [])
   const newsList = useState<any[]>('adm-news', () => [])
   const siteSetting = useState<any>('adm-site', () => ({}))
@@ -97,7 +98,9 @@ export const useAdminApi = () => {
         loadNews(),
         api('/api/site-setting').catch(() => ({ data: {} }))
       ])
-      jobs.value = j?.data || []
+      const allJobs: any[] = j?.data || []
+      jobs.value = allJobs.filter(x => !x.isSpam)
+      spamJobs.value = allJobs.filter(x => x.isSpam)
       products.value = p?.data || []
       newsList.value = n
       siteSetting.value = s?.data || {}
@@ -134,12 +137,46 @@ export const useAdminApi = () => {
     try {
       await api(`/api/contact-inquiries/${job.documentId}`, { method: 'DELETE' })
       jobs.value = jobs.value.filter(j => j.documentId !== job.documentId)
+      spamJobs.value = spamJobs.value.filter(j => j.documentId !== job.documentId)
       notify('ลบงานแล้ว')
       return true
     } catch {
       notify('ลบงานไม่สำเร็จ', 'err')
       return false
     }
+  }
+
+  // Mark / unmark a message as spam (sysadmin only)
+  const setSpam = async (job: any, isSpam: boolean) => {
+    if (!isSysadmin.value) return false
+    try {
+      await api(`/api/contact-inquiries/${job.documentId}`, { method: 'PUT', body: { data: { isSpam, spamReason: isSpam ? (job.spamReason || 'ทำเครื่องหมายโดยผู้ดูแล') : null } } })
+      job.isSpam = isSpam
+      if (isSpam) {
+        jobs.value = jobs.value.filter(j => j.documentId !== job.documentId)
+        spamJobs.value = [job, ...spamJobs.value]
+        notify(`ย้ายข้อความของ ${job.contactName} ไปที่สแปมแล้ว`)
+      } else {
+        spamJobs.value = spamJobs.value.filter(j => j.documentId !== job.documentId)
+        jobs.value = [job, ...jobs.value].sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt))
+        notify(`ย้าย ${job.contactName} กลับเข้างานใหม่แล้ว`)
+      }
+      return true
+    } catch (e: any) {
+      notify(e?.data?.error?.message?.includes('Invalid key') ? 'ต้องอัปเดตระบบหลังบ้านก่อนจึงจะใช้ได้' : 'อัปเดตไม่สำเร็จ', 'err')
+      return false
+    }
+  }
+
+  const deleteSpamAll = async () => {
+    if (!isSysadmin.value) return
+    const list = [...spamJobs.value]
+    let ok = 0
+    for (const j of list) {
+      try { await api(`/api/contact-inquiries/${j.documentId}`, { method: 'DELETE' }); ok++ } catch {}
+    }
+    await loadAll()
+    notify(`ลบสแปม ${ok} รายการแล้ว`)
   }
 
   // ---------------- Products ----------------
@@ -268,24 +305,31 @@ export const useAdminApi = () => {
 
   const publishNews = async (n: any) => saveNews(n, true)
 
-  // The Strapi REST API has no "unpublish" call, so we copy the article as a
-  // new draft first and only then delete the live one. If the copy fails
-  // nothing is touched.
+  // Hide from the public site but keep the article as a draft. Uses the custom
+  // backend route POST /news-articles/:id/unpublish. If the backend hasn't been
+  // redeployed with that route yet, fall back to: copy as a new draft, then
+  // delete the live one (if the copy fails nothing is touched).
   const unpublishNews = async (n: any) => {
     if (!isSysadmin.value) return false
-    let copy: any
     try {
-      copy = await api('/api/news-articles', { method: 'POST', body: { data: newsPayload(n) } })
-    } catch {
-      notify('ซ่อนข่าวไม่สำเร็จ', 'err')
-      return false
-    }
-    try {
-      await api(`/api/news-articles/${n.documentId}`, { method: 'DELETE' })
-    } catch {
-      if (copy?.data?.documentId) await api(`/api/news-articles/${copy.data.documentId}`, { method: 'DELETE' }).catch(() => {})
-      notify('ซ่อนข่าวไม่สำเร็จ', 'err')
-      return false
+      await api(`/api/news-articles/${n.documentId}/unpublish`, { method: 'POST' })
+    } catch (e: any) {
+      const st = e?.statusCode || e?.status
+      if (st !== 404 && st !== 405 && st !== 403) { notify('ซ่อนข่าวไม่สำเร็จ', 'err'); return false }
+      let copy: any
+      try {
+        copy = await api('/api/news-articles', { method: 'POST', body: { data: newsPayload(n) } })
+      } catch {
+        notify('ซ่อนข่าวไม่สำเร็จ', 'err')
+        return false
+      }
+      try {
+        await api(`/api/news-articles/${n.documentId}`, { method: 'DELETE' })
+      } catch {
+        if (copy?.data?.documentId) await api(`/api/news-articles/${copy.data.documentId}`, { method: 'DELETE' }).catch(() => {})
+        notify('ซ่อนข่าวไม่สำเร็จ', 'err')
+        return false
+      }
     }
     notify(`ซ่อน "${n.title_th}" จากหน้าเว็บแล้ว (เก็บเป็นฉบับร่าง)`)
     newsList.value = await loadNews()
@@ -369,10 +413,11 @@ export const useAdminApi = () => {
 
   return {
     strapiUrl, token, currentUser, isLoading, toast, isSysadmin,
-    jobs, products, newsList, siteSetting, usersList, rolesList,
+    jobs, spamJobs, products, newsList, siteSetting, usersList, rolesList,
     notify, imageOf, login, logout, restoreSession, loadAll,
-    setJobStatus, deleteJob, saveProduct, toggleFeatured, deleteProduct,
-    saveNews, publishNews, unpublishNews, deleteNews, uploadImage, saveSiteSetting, createUser, changeUserRole
+    setJobStatus, deleteJob, setSpam, deleteSpamAll, uploadImage,
+    saveProduct, toggleFeatured, deleteProduct,
+    saveNews, publishNews, unpublishNews, deleteNews, saveSiteSetting, createUser, changeUserRole
   }
 }
 

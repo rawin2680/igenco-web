@@ -1,5 +1,6 @@
 import { newsDateValue } from '~/utils/markdown'
 import { useRuntimeConfig, useState } from '#app'
+import { useAppI18n } from '~/composables/useI18n'
 import type {
   HeroContent,
   CapabilityItem,
@@ -303,7 +304,7 @@ export const useStrapiApi = () => {
   const getNewsArticles = async () => {
     if (useMock) return null
     try {
-      const res = await $fetch<{ data: any[] }>(`${apiBase}/api/news-articles?populate=*&sort=id:asc`)
+      const res = await $fetch<{ data: any[] }>(`${apiBase}/api/news-articles?populate=*&sort=id:desc`)
       if (!Array.isArray(res?.data) || res.data.length === 0) return null
       const list = res.data.map(item => {
         const u = item.image?.url
@@ -376,7 +377,21 @@ export const useStrapiApi = () => {
     subject?: string
     interestedProduct?: string
     details?: string
-  }): Promise<{ success: boolean; message: string }> => {
+  }, guard: { startedAt?: number; honeypot?: string } = {}): Promise<{ success: boolean; message: string }> => {
+    const isTh = useAppI18n().locale.value === 'th'
+    // Anti-spam (client side): honeypot filled or form sent too fast → pretend success, send nothing.
+    const elapsed = guard.startedAt ? Date.now() - guard.startedAt : 0
+    if (guard.honeypot || (guard.startedAt && elapsed < 3000)) {
+      await new Promise(r => setTimeout(r, 600))
+      return { success: true, message: 'ok' }
+    }
+    // Simple cooldown so double clicks / repeated sends don't flood the inbox.
+    try {
+      const last = Number(localStorage.getItem('igenco_contact_last') || 0)
+      if (Date.now() - last < 60_000) {
+        return { success: false, message: isTh ? 'คุณเพิ่งส่งข้อความไป กรุณารอ 1 นาทีแล้วลองใหม่' : 'You just sent a message. Please wait a minute and try again.' }
+      }
+    } catch {}
     if (useMock) {
       console.log('[MOCK API] Contact Inquiry:', payload)
       await new Promise(r => setTimeout(r, 500))
@@ -385,12 +400,19 @@ export const useStrapiApi = () => {
     try {
       await $fetch(`${apiBase}/api/contact-inquiries`, {
         method: 'POST',
+        headers: { 'X-Form-Elapsed': String(elapsed || ''), 'X-Form-HP': '' },
         body: { data: payload }
       })
+      try { localStorage.setItem('igenco_contact_last', String(Date.now())) } catch {}
       return { success: true, message: 'บันทึกข้อมูลเรียบร้อยแล้ว' }
     } catch (err: any) {
       console.error('Error submitting contact inquiry to Strapi:', err)
-      return { success: false, message: err?.message || 'เกิดข้อผิดพลาดในการส่งข้อมูล' }
+      const status = err?.statusCode || err?.status
+      if (status === 429) {
+        return { success: false, message: isTh ? 'ส่งข้อความบ่อยเกินไป กรุณารอสักครู่แล้วลองใหม่ หรือโทรหาเราโดยตรง' : 'Too many messages. Please wait a moment or call us directly.' }
+      }
+      const serverMsg = err?.data?.error?.message
+      return { success: false, message: serverMsg || (isTh ? 'เกิดข้อผิดพลาดในการส่งข้อมูล กรุณาลองใหม่' : 'Could not send. Please try again.') }
     }
   }
 
@@ -410,7 +432,7 @@ export const useStrapiApi = () => {
     return mockPartners
   }
 
-  const submitDemoLead = async (payload: DemoLeadForm): Promise<{ success: boolean; message: string }> => {
+  const submitDemoLead = async (payload: DemoLeadForm, guard: { startedAt?: number; honeypot?: string } = {}): Promise<{ success: boolean; message: string }> => {
     return submitContactInquiry({
       contactName: payload.fullName,
       organization: payload.companyName,
@@ -418,7 +440,7 @@ export const useStrapiApi = () => {
       subject: 'นัดสาธิตการใช้งานระบบ (Modal Request Demo)',
       interestedProduct: payload.industry || 'Enterprise AI',
       details: payload.notes || `Industry: ${payload.industry || '-'}`
-    })
+    }, guard)
   }
 
   const getSiteSetting = () => {

@@ -78,6 +78,8 @@ export default {
               'api::news-article.news-article.create',
               'api::news-article.news-article.update',
               'api::news-article.news-article.delete',
+              'api::news-article.news-article.unpublish',
+              'plugin::upload.content-api.upload',
               'api::product.product.find',
               'api::product.product.findOne',
               'api::product.product.create',
@@ -100,14 +102,14 @@ export default {
               'plugin::users-permissions.user.update',
               'plugin::users-permissions.user.me',
               'plugin::users-permissions.role.find',
-              // upload cover/inline images from the custom /admin news editor
-              'plugin::upload.content-api.upload',
             ]
           : [
               'api::news-article.news-article.find',
               'api::news-article.news-article.findOne',
               'api::news-article.news-article.create',
               'api::news-article.news-article.update',
+              'api::news-article.news-article.unpublish',
+              'plugin::upload.content-api.upload',
               'api::site-setting.site-setting.find',
               'api::site-setting.site-setting.update',
               'api::product.product.find',
@@ -115,7 +117,6 @@ export default {
               'api::client-partner.client-partner.find',
               'api::contact-inquiry.contact-inquiry.find',
               'plugin::users-permissions.user.me',
-              'plugin::upload.content-api.upload',
             ];
 
         for (const action of roleActions) {
