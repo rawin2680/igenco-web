@@ -37,8 +37,19 @@
     },
     "status": {
       "type": "enumeration",
-      "enum": ["new", "contacted", "closed"],
+      "enum": [
+        "new",
+        "contacted",
+        "closed"
+      ],
       "default": "new"
+    },
+    "isSpam": {
+      "type": "boolean",
+      "default": false
+    },
+    "spamReason": {
+      "type": "string"
     }
   }
 }

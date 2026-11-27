@@ -20,6 +20,7 @@ export const useAdminApi = () => {
   const toast = useState<{ msg: string; kind: 'ok' | 'err' } | null>('adm-toast', () => null)
 
   const jobs = useState<any[]>('adm-jobs', () => [])
+  const spamJobs = useState<any[]>('adm-spam', () => [])
   const products = useState<any[]>('adm-products', () => [])
   const newsList = useState<any[]>('adm-news', () => [])
   const siteSetting = useState<any>('adm-site', () => ({}))
@@ -87,6 +88,19 @@ export const useAdminApi = () => {
   }
 
   // ---------------- Load ----------------
+  // News: load draft versions (= latest edits, includes hidden ones) and mark which are live.
+  const loadNewsList = async () => {
+    const q = 'sort=id:desc&pagination[pageSize]=100&populate=image'
+    const [drafts, live]: any = await Promise.all([
+      api(`/api/news-articles?status=draft&${q}`).catch(() => null),
+      api(`/api/news-articles?${q}`).catch(() => ({ data: [] }))
+    ])
+    const liveList: any[] = live?.data || []
+    if (!drafts?.data) return liveList.map(n => ({ ...n, _published: true }))
+    const liveIds = new Set(liveList.map(n => n.documentId))
+    return (drafts.data as any[]).map(n => ({ ...n, _published: liveIds.has(n.documentId) }))
+  }
+
   const loadAll = async () => {
     if (!token.value) return
     isLoading.value = true
@@ -94,12 +108,14 @@ export const useAdminApi = () => {
       const [j, p, n, s]: any = await Promise.all([
         api('/api/contact-inquiries?sort=createdAt:desc&pagination[pageSize]=200').catch(() => ({ data: [] })),
         api('/api/products?populate=image&sort=featuredOrder:asc,id:asc&pagination[pageSize]=200').catch(() => ({ data: [] })),
-        api('/api/news-articles?sort=id:desc&pagination[pageSize]=100').catch(() => ({ data: [] })),
+        loadNewsList(),
         api('/api/site-setting').catch(() => ({ data: {} }))
       ])
-      jobs.value = j?.data || []
+      const allJobs: any[] = j?.data || []
+      jobs.value = allJobs.filter(x => !x.isSpam)
+      spamJobs.value = allJobs.filter(x => x.isSpam)
       products.value = p?.data || []
-      newsList.value = n?.data || []
+      newsList.value = n
       siteSetting.value = s?.data || {}
 
       if (isSysadmin.value) {
@@ -134,11 +150,63 @@ export const useAdminApi = () => {
     try {
       await api(`/api/contact-inquiries/${job.documentId}`, { method: 'DELETE' })
       jobs.value = jobs.value.filter(j => j.documentId !== job.documentId)
+      spamJobs.value = spamJobs.value.filter(j => j.documentId !== job.documentId)
       notify('ลบงานแล้ว')
       return true
     } catch {
       notify('ลบงานไม่สำเร็จ', 'err')
       return false
+    }
+  }
+
+  // Mark / unmark a message as spam (sysadmin only)
+  const setSpam = async (job: any, isSpam: boolean) => {
+    if (!isSysadmin.value) return false
+    try {
+      await api(`/api/contact-inquiries/${job.documentId}`, { method: 'PUT', body: { data: { isSpam, spamReason: isSpam ? (job.spamReason || 'ทำเครื่องหมายโดยผู้ดูแล') : null } } })
+      job.isSpam = isSpam
+      if (isSpam) {
+        jobs.value = jobs.value.filter(j => j.documentId !== job.documentId)
+        spamJobs.value = [job, ...spamJobs.value]
+        notify(`ย้ายข้อความของ ${job.contactName} ไปที่สแปมแล้ว`)
+      } else {
+        spamJobs.value = spamJobs.value.filter(j => j.documentId !== job.documentId)
+        jobs.value = [job, ...jobs.value].sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt))
+        notify(`ย้าย ${job.contactName} กลับเข้างานใหม่แล้ว`)
+      }
+      return true
+    } catch (e: any) {
+      notify(e?.data?.error?.message?.includes('Invalid key') ? 'ต้องอัปเดตระบบหลังบ้านก่อนจึงจะใช้ได้' : 'อัปเดตไม่สำเร็จ', 'err')
+      return false
+    }
+  }
+
+  const deleteSpamAll = async () => {
+    if (!isSysadmin.value) return
+    const list = [...spamJobs.value]
+    let ok = 0
+    for (const j of list) {
+      try { await api(`/api/contact-inquiries/${j.documentId}`, { method: 'DELETE' }); ok++ } catch {}
+    }
+    await loadAll()
+    notify(`ลบสแปม ${ok} รายการแล้ว`)
+  }
+
+  // ---------------- Upload ----------------
+  const uploadImage = async (file: File): Promise<string | null> => {
+    if (!file.type.startsWith('image/')) { notify('เลือกได้เฉพาะไฟล์รูปภาพ', 'err'); return null }
+    if (file.size > 5 * 1024 * 1024) { notify('รูปใหญ่เกิน 5MB', 'err'); return null }
+    const fd = new FormData()
+    fd.append('files', file)
+    try {
+      const res: any = await api('/api/upload', { method: 'POST', body: fd })
+      const url = res?.[0]?.url
+      if (!url) throw new Error('no url')
+      return url.startsWith('http') ? url : `${strapiUrl}${url}`
+    } catch (e: any) {
+      const st = e?.statusCode || e?.status
+      notify(st === 403 ? 'บัญชีนี้ยังไม่มีสิทธิ์อัปโหลดรูป (ต้องอัปเดตระบบหลังบ้าน) ใช้ลิงก์รูปแทนได้' : 'อัปโหลดรูปไม่สำเร็จ', 'err')
+      return null
     }
   }
 
@@ -206,31 +274,63 @@ export const useAdminApi = () => {
   }
 
   // ---------------- News ----------------
-  const saveNews = async (n: any) => {
-    const data = {
-      title_th: n.title_th,
-      title_en: n.title_en || n.title_th,
-      subtitle_th: n.subtitle_th,
-      subtitle_en: n.subtitle_en || n.subtitle_th,
-      body_th: n.body_th,
-      body_en: n.body_en || n.body_th,
-      category: n.category,
-      tag: n.tag || n.category,
-      date_th: n.date_th,
-      date_en: n.date_en || n.date_th,
-      imageUrl: n.imageUrl || null
-    }
+  const newsPayload = (n: any) => ({
+    title_th: n.title_th,
+    title_en: n.title_en || n.title_th,
+    subtitle_th: n.subtitle_th || null,
+    subtitle_en: n.subtitle_en || n.subtitle_th || null,
+    body_th: n.body_th || null,
+    body_en: n.body_en || n.body_th || null,
+    fullContent_th: n.fullContent_th || null,
+    fullContent_en: n.fullContent_en || null,
+    category: n.category,
+    tag: n.tag || n.category,
+    readTime: n.readTime || '1 min',
+    date_th: n.date_th,
+    date_en: n.date_en || n.date_th,
+    imageUrl: n.imageUrl || null,
+    externalLink: n.externalLink || null
+  })
+
+  /** publish=true → live on the site now; false → saved as draft only (hidden). */
+  const saveNews = async (n: any, publish = true) => {
+    const qs = publish ? '?status=published' : ''
     try {
       if (n.documentId) {
-        await api(`/api/news-articles/${n.documentId}?status=published`, { method: 'PUT', body: { data } })
+        await api(`/api/news-articles/${n.documentId}${qs}`, { method: 'PUT', body: { data: newsPayload(n) } })
       } else {
-        await api('/api/news-articles?status=published', { method: 'POST', body: { data } })
+        await api(`/api/news-articles${qs}`, { method: 'POST', body: { data: newsPayload(n) } })
       }
-      notify('บันทึกข่าวแล้ว')
+      notify(publish ? 'บันทึกและเผยแพร่ข่าวแล้ว' : 'บันทึกเป็นฉบับร่างแล้ว (ยังไม่ขึ้นเว็บ)')
       await loadAll()
       return true
+    } catch (e: any) {
+      notify(e?.data?.error?.message || 'บันทึกข่าวไม่สำเร็จ', 'err')
+      return false
+    }
+  }
+
+  const unpublishNews = async (n: any) => {
+    try {
+      await api(`/api/news-articles/${n.documentId}/unpublish`, { method: 'POST' })
+      notify('ซ่อนข่าวจากหน้าเว็บแล้ว (ยังเก็บไว้เป็นฉบับร่าง)')
+      await loadAll()
+      return true
+    } catch (e: any) {
+      const st = e?.statusCode || e?.status
+      notify(st === 404 || st === 405 || st === 403 ? 'ต้องอัปเดตระบบหลังบ้านก่อนจึงจะซ่อนข่าวได้' : 'ซ่อนข่าวไม่สำเร็จ', 'err')
+      return false
+    }
+  }
+
+  const deleteNews = async (n: any) => {
+    try {
+      await api(`/api/news-articles/${n.documentId}`, { method: 'DELETE' })
+      newsList.value = newsList.value.filter(x => x.documentId !== n.documentId)
+      notify('ลบข่าวแล้ว')
+      return true
     } catch {
-      notify('บันทึกข่าวไม่สำเร็จ', 'err')
+      notify('ลบข่าวไม่สำเร็จ', 'err')
       return false
     }
   }
@@ -280,10 +380,11 @@ export const useAdminApi = () => {
 
   return {
     strapiUrl, token, currentUser, isLoading, toast, isSysadmin,
-    jobs, products, newsList, siteSetting, usersList, rolesList,
+    jobs, spamJobs, products, newsList, siteSetting, usersList, rolesList,
     notify, imageOf, login, logout, restoreSession, loadAll,
-    setJobStatus, deleteJob, saveProduct, toggleFeatured, deleteProduct,
-    saveNews, saveSiteSetting, createUser, changeUserRole
+    setJobStatus, deleteJob, setSpam, deleteSpamAll, uploadImage,
+    saveProduct, toggleFeatured, deleteProduct,
+    saveNews, unpublishNews, deleteNews, saveSiteSetting, createUser, changeUserRole
   }
 }
 
