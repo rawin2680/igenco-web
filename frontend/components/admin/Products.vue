@@ -9,7 +9,7 @@ const {
 
 const view = ref<'grid' | 'table'>('grid')
 // shared so the overview's "จัดการ" button can open the homepage slides view
-const filter = useState<'all' | 'featured'>('adm-prod-filter', () => 'all')
+const filter = useState<'all' | 'featured'>('adm-prod-filter', () => 'featured')
 const editing = ref<any | null>(null)
 const lang = ref<'th' | 'en'>('th')
 const saving = ref(false)
@@ -66,12 +66,20 @@ const removeImage = () => { if (editing.value) { editing.value.image = null; edi
 
 const rows = computed(() => {
   const q = props.search.trim().toLowerCase()
-  return products.value.filter(p => {
-    if (filter.value === 'featured' && !p.isFeatured) return false
-    if (!q) return true
-    return [p.title, p.subtitle_th, p.subtitle_en, p.tag, ...(p.tags || [])].some(v => (v || '').toLowerCase().includes(q))
-  })
+  // homepage highlights first (in slide order), then the rest
+  const rank = (p: any) => (p.isFeatured ? p.featuredOrder || 99 : 1000)
+  return products.value
+    .filter(p => {
+      if (filter.value === 'featured' && !p.isFeatured) return false
+      if (!q) return true
+      return [p.title, p.subtitle_th, p.subtitle_en, p.tag, ...(p.tags || [])].some(v => (v || '').toLowerCase().includes(q))
+    })
+    .map((p, i) => ({ p, i }))
+    .sort((a, b) => rank(a.p) - rank(b.p) || a.i - b.i)
+    .map(x => x.p)
 })
+// searching looks through all products
+watch(() => props.search, v => { if (v.trim()) filter.value = 'all' })
 
 const asList = (v: any): string[] => (Array.isArray(v) ? [...v] : [])
 
@@ -126,15 +134,15 @@ const inputCls = 'w-full px-3 py-2 rounded-lg bg-white ring-1 ring-black/[0.12] 
     <div class="flex flex-wrap items-center gap-2">
       <div class="flex gap-1.5">
         <button
-          class="px-3 py-1.5 rounded-lg text-[13px] font-medium transition"
-          :class="filter === 'all' ? 'bg-forestBlack text-white' : 'bg-white text-mutedSlate ring-1 ring-black/[0.06]'"
-          @click="filter = 'all'"
-        >ทั้งหมด <span class="opacity-60">{{ products.length }}</span></button>
-        <button
           class="px-3 py-1.5 rounded-lg text-[13px] font-medium transition flex items-center gap-1"
           :class="filter === 'featured' ? 'bg-forestBlack text-white' : 'bg-white text-mutedSlate ring-1 ring-black/[0.06]'"
           @click="filter = 'featured'"
         ><AdminIcon name="star" :size="13" /> สไลด์หน้าแรก <span class="opacity-60">{{ featuredCount }}</span></button>
+        <button
+          class="px-3 py-1.5 rounded-lg text-[13px] font-medium transition"
+          :class="filter === 'all' ? 'bg-forestBlack text-white' : 'bg-white text-mutedSlate ring-1 ring-black/[0.06]'"
+          @click="filter = 'all'"
+        >ทั้งหมด <span class="opacity-60">{{ products.length }}</span></button>
       </div>
 
       <div class="ml-auto flex items-center gap-2">
@@ -156,6 +164,42 @@ const inputCls = 'w-full px-3 py-2 rounded-lg bg-white ring-1 ring-black/[0.12] 
         <AdminIcon name="home" :size="16" class="mt-0.5 shrink-0" />
         <div>ส่วน <b>"ผลิตภัณฑ์ไฮไลต์ของ IGENCO"</b> บนหน้าแรก แก้ได้ที่นี่ทั้งหมด: หัวข้อ ลำดับสไลด์ และเนื้อหาแต่ละสไลด์ (กด "แก้ไขสไลด์")</div>
       </div>
+
+      <!-- Slide order -->
+      <section class="bg-white rounded-2xl ring-1 ring-black/[0.06]">
+        <header class="flex items-center gap-2 px-5 py-4 border-b border-black/[0.06]">
+          <h3 class="text-sm font-semibold">สไลด์ ({{ featuredList.length }})</h3>
+          <span class="text-xs text-mutedSlate">เรียงตามลำดับที่ขึ้นบนเว็บ</span>
+        </header>
+        <ol class="p-2">
+          <li v-for="(p, i) in featuredList" :key="p.documentId || p.id" class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-[#F7F9F8]">
+            <div v-if="isSysadmin" class="flex flex-col">
+              <button type="button" class="p-0.5 rounded text-mutedSlate hover:text-forestBlack disabled:opacity-25" :disabled="i === 0" aria-label="เลื่อนขึ้น" @click="moveSlide(i, -1)">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 15l-6-6-6 6"/></svg>
+              </button>
+              <button type="button" class="p-0.5 rounded text-mutedSlate hover:text-forestBlack disabled:opacity-25" :disabled="i === featuredList.length - 1" aria-label="เลื่อนลง" @click="moveSlide(i, 1)">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 9l6 6 6-6"/></svg>
+              </button>
+            </div>
+            <span class="w-7 text-center text-xs font-mono font-semibold text-mutedSlate">{{ pad(i + 1) }}</span>
+            <div class="w-20 h-12 rounded-lg overflow-hidden bg-[#F4F7F5] shrink-0">
+              <img v-if="imageOf(p)" :src="imageOf(p)!" class="w-full h-full object-cover" loading="lazy" onerror="this.style.display='none'" />
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="text-[13px] font-semibold truncate">{{ p.title }}<span v-if="p.subtitle_th" class="font-normal text-mutedSlate"> — {{ p.subtitle_th }}</span></div>
+              <div class="text-xs text-mutedSlate truncate">{{ p.tag || '-' }}<span v-if="p.awardBadge"> · {{ p.awardBadge }}</span></div>
+            </div>
+            <button type="button" class="px-3 py-1.5 rounded-lg text-[13px] font-medium text-[#00875A] hover:bg-[#E8F8F2] flex items-center gap-1 shrink-0" @click="openEdit(p)">
+              <AdminIcon :name="isSysadmin ? 'edit' : 'eye'" :size="14" /> <span class="hidden sm:inline">{{ isSysadmin ? 'แก้ไขสไลด์' : 'ดู' }}</span>
+            </button>
+            <button v-if="isSysadmin" type="button" class="p-1.5 rounded-lg text-mutedSlate hover:text-red-600 hover:bg-red-50 shrink-0" title="เอาออกจากสไลด์" @click="toggleFeatured(p)">
+              <AdminIcon name="x" :size="15" />
+            </button>
+          </li>
+          <li v-if="!featuredList.length" class="px-2 py-8 text-center text-sm text-mutedSlate">ยังไม่มีสไลด์ กดรูปดาว ☆ บนการ์ดผลิตภัณฑ์เพื่อเพิ่ม</li>
+        </ol>
+      </section>
+      <p class="text-xs text-mutedSlate">เพิ่มสไลด์: ไปที่ "ทั้งหมด" แล้วกดรูปดาวบนการ์ดผลิตภัณฑ์ หรือเปิดแก้ไขแล้วเปิดสวิตช์ "แสดงในสไลด์หน้าแรก"</p>
 
       <!-- Section headings -->
       <section class="bg-white rounded-2xl ring-1 ring-black/[0.06] p-5">
@@ -194,42 +238,6 @@ const inputCls = 'w-full px-3 py-2 rounded-lg bg-white ring-1 ring-black/[0.12] 
           </fieldset>
         </form>
       </section>
-
-      <!-- Slide order -->
-      <section class="bg-white rounded-2xl ring-1 ring-black/[0.06]">
-        <header class="flex items-center gap-2 px-5 py-4 border-b border-black/[0.06]">
-          <h3 class="text-sm font-semibold">สไลด์ ({{ featuredList.length }})</h3>
-          <span class="text-xs text-mutedSlate">เรียงตามลำดับที่ขึ้นบนเว็บ</span>
-        </header>
-        <ol class="p-2">
-          <li v-for="(p, i) in featuredList" :key="p.documentId || p.id" class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-[#F7F9F8]">
-            <div v-if="isSysadmin" class="flex flex-col">
-              <button type="button" class="p-0.5 rounded text-mutedSlate hover:text-forestBlack disabled:opacity-25" :disabled="i === 0" aria-label="เลื่อนขึ้น" @click="moveSlide(i, -1)">
-                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 15l-6-6-6 6"/></svg>
-              </button>
-              <button type="button" class="p-0.5 rounded text-mutedSlate hover:text-forestBlack disabled:opacity-25" :disabled="i === featuredList.length - 1" aria-label="เลื่อนลง" @click="moveSlide(i, 1)">
-                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 9l6 6 6-6"/></svg>
-              </button>
-            </div>
-            <span class="w-7 text-center text-xs font-mono font-semibold text-mutedSlate">{{ pad(i + 1) }}</span>
-            <div class="w-20 h-12 rounded-lg overflow-hidden bg-[#F4F7F5] shrink-0">
-              <img v-if="imageOf(p)" :src="imageOf(p)!" class="w-full h-full object-cover" loading="lazy" onerror="this.style.display='none'" />
-            </div>
-            <div class="min-w-0 flex-1">
-              <div class="text-[13px] font-semibold truncate">{{ p.title }}<span v-if="p.subtitle_th" class="font-normal text-mutedSlate"> — {{ p.subtitle_th }}</span></div>
-              <div class="text-xs text-mutedSlate truncate">{{ p.tag || '-' }}<span v-if="p.awardBadge"> · {{ p.awardBadge }}</span></div>
-            </div>
-            <button type="button" class="px-3 py-1.5 rounded-lg text-[13px] font-medium text-[#00875A] hover:bg-[#E8F8F2] flex items-center gap-1 shrink-0" @click="openEdit(p)">
-              <AdminIcon :name="isSysadmin ? 'edit' : 'eye'" :size="14" /> <span class="hidden sm:inline">{{ isSysadmin ? 'แก้ไขสไลด์' : 'ดู' }}</span>
-            </button>
-            <button v-if="isSysadmin" type="button" class="p-1.5 rounded-lg text-mutedSlate hover:text-red-600 hover:bg-red-50 shrink-0" title="เอาออกจากสไลด์" @click="toggleFeatured(p)">
-              <AdminIcon name="x" :size="15" />
-            </button>
-          </li>
-          <li v-if="!featuredList.length" class="px-2 py-8 text-center text-sm text-mutedSlate">ยังไม่มีสไลด์ กดรูปดาว ☆ บนการ์ดผลิตภัณฑ์เพื่อเพิ่ม</li>
-        </ol>
-      </section>
-      <p class="text-xs text-mutedSlate">เพิ่มสไลด์: ไปที่ "ทั้งหมด" แล้วกดรูปดาวบนการ์ดผลิตภัณฑ์ หรือเปิดแก้ไขแล้วเปิดสวิตช์ "แสดงในสไลด์หน้าแรก"</p>
     </div>
 
     <!-- Grid -->
