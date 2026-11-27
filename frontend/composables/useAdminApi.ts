@@ -88,19 +88,6 @@ export const useAdminApi = () => {
   }
 
   // ---------------- Load ----------------
-  // News: load draft versions (= latest edits, includes hidden ones) and mark which are live.
-  const loadNewsList = async () => {
-    const q = 'sort=id:desc&pagination[pageSize]=100&populate=image'
-    const [drafts, live]: any = await Promise.all([
-      api(`/api/news-articles?status=draft&${q}`).catch(() => null),
-      api(`/api/news-articles?${q}`).catch(() => ({ data: [] }))
-    ])
-    const liveList: any[] = live?.data || []
-    if (!drafts?.data) return liveList.map(n => ({ ...n, _published: true }))
-    const liveIds = new Set(liveList.map(n => n.documentId))
-    return (drafts.data as any[]).map(n => ({ ...n, _published: liveIds.has(n.documentId) }))
-  }
-
   const loadAll = async () => {
     if (!token.value) return
     isLoading.value = true
@@ -108,7 +95,7 @@ export const useAdminApi = () => {
       const [j, p, n, s]: any = await Promise.all([
         api('/api/contact-inquiries?sort=createdAt:desc&pagination[pageSize]=200').catch(() => ({ data: [] })),
         api('/api/products?populate=image&sort=featuredOrder:asc,id:asc&pagination[pageSize]=200').catch(() => ({ data: [] })),
-        loadNewsList(),
+        loadNews(),
         api('/api/site-setting').catch(() => ({ data: {} }))
       ])
       const allJobs: any[] = j?.data || []
@@ -192,24 +179,6 @@ export const useAdminApi = () => {
     notify(`ลบสแปม ${ok} รายการแล้ว`)
   }
 
-  // ---------------- Upload ----------------
-  const uploadImage = async (file: File): Promise<string | null> => {
-    if (!file.type.startsWith('image/')) { notify('เลือกได้เฉพาะไฟล์รูปภาพ', 'err'); return null }
-    if (file.size > 5 * 1024 * 1024) { notify('รูปใหญ่เกิน 5MB', 'err'); return null }
-    const fd = new FormData()
-    fd.append('files', file)
-    try {
-      const res: any = await api('/api/upload', { method: 'POST', body: fd })
-      const url = res?.[0]?.url
-      if (!url) throw new Error('no url')
-      return url.startsWith('http') ? url : `${strapiUrl}${url}`
-    } catch (e: any) {
-      const st = e?.statusCode || e?.status
-      notify(st === 403 ? 'บัญชีนี้ยังไม่มีสิทธิ์อัปโหลดรูป (ต้องอัปเดตระบบหลังบ้าน) ใช้ลิงก์รูปแทนได้' : 'อัปโหลดรูปไม่สำเร็จ', 'err')
-      return null
-    }
-  }
-
   // ---------------- Products ----------------
   const productPayload = (p: any) => ({
     title: p.title,
@@ -274,64 +243,128 @@ export const useAdminApi = () => {
   }
 
   // ---------------- News ----------------
-  const newsPayload = (n: any) => ({
-    title_th: n.title_th,
-    title_en: n.title_en || n.title_th,
-    subtitle_th: n.subtitle_th || null,
-    subtitle_en: n.subtitle_en || n.subtitle_th || null,
-    body_th: n.body_th || null,
-    body_en: n.body_en || n.body_th || null,
-    fullContent_th: n.fullContent_th || null,
-    fullContent_en: n.fullContent_en || null,
-    category: n.category,
-    tag: n.tag || n.category,
-    readTime: n.readTime || '1 min',
-    date_th: n.date_th,
-    date_en: n.date_en || n.date_th,
-    imageUrl: n.imageUrl || null,
-    externalLink: n.externalLink || null
-  })
+  // Strapi v5 keeps a draft row for every article and a separate published row
+  // once it is live. The admin edits the draft; the public site only sees the
+  // published row. We load both and tag each article with its status:
+  //   published  - live, draft identical
+  //   modified   - live, but the draft has newer edits not yet published
+  //   draft      - never published / hidden from the site
+  const loadNews = async (): Promise<any[]> => {
+    const [d, p]: any = await Promise.all([
+      api('/api/news-articles?status=draft&populate=image&sort=updatedAt:desc&pagination[pageSize]=200').catch(() => null),
+      api('/api/news-articles?status=published&fields[0]=updatedAt&fields[1]=publishedAt&pagination[pageSize]=200').catch(() => ({ data: [] }))
+    ])
+    const live = new Map<string, any>((p?.data || []).map((x: any) => [x.documentId, x]))
+    // If the draft query is refused for some reason, fall back to the live list
+    const drafts: any[] = d?.data || (await api('/api/news-articles?populate=image&sort=updatedAt:desc&pagination[pageSize]=200').catch(() => ({ data: [] })))?.data || []
+    return drafts.map(n => {
+      const pub = live.get(n.documentId)
+      let _status: 'published' | 'modified' | 'draft' = 'draft'
+      if (pub) _status = new Date(n.updatedAt).getTime() - new Date(pub.updatedAt).getTime() > 3000 ? 'modified' : 'published'
+      return { ...n, _status, _publishedAt: pub?.publishedAt || null }
+    })
+  }
 
-  /** publish=true → live on the site now; false → saved as draft only (hidden). */
-  const saveNews = async (n: any, publish = true) => {
-    const qs = publish ? '?status=published' : ''
-    try {
-      if (n.documentId) {
-        await api(`/api/news-articles/${n.documentId}${qs}`, { method: 'PUT', body: { data: newsPayload(n) } })
-      } else {
-        await api(`/api/news-articles${qs}`, { method: 'POST', body: { data: newsPayload(n) } })
-      }
-      notify(publish ? 'บันทึกและเผยแพร่ข่าวแล้ว' : 'บันทึกเป็นฉบับร่างแล้ว (ยังไม่ขึ้นเว็บ)')
-      await loadAll()
-      return true
-    } catch (e: any) {
-      notify(e?.data?.error?.message || 'บันทึกข่าวไม่สำเร็จ', 'err')
-      return false
+  const newsPayload = (n: any) => {
+    const title_th = (n.title_th || '').trim()
+    return {
+      title_th,
+      title_en: (n.title_en || '').trim() || title_th,
+      subtitle_th: n.subtitle_th || null,
+      subtitle_en: n.subtitle_en || n.subtitle_th || null,
+      body_th: n.body_th || null,
+      body_en: n.body_en || n.body_th || null,
+      fullContent_th: n.fullContent_th || null,
+      fullContent_en: n.fullContent_en || null,
+      category: n.category || 'Enterprise Software',
+      tag: (n.tag || '').trim() || n.category || 'Enterprise Software',
+      readTime: n.readTime || '1 min',
+      date_th: n.date_th || null,
+      date_en: n.date_en || n.date_th || null,
+      image: n.image?.id ?? null,
+      imageUrl: n.imageUrl || null,
+      externalLink: n.externalLink || null
     }
   }
 
+  // publish=true -> save and put live; false -> save as draft only (site unchanged)
+  const saveNews = async (n: any, publish = true): Promise<any | null> => {
+    const q = publish ? '?status=published&populate=image' : '?populate=image'
+    try {
+      const res: any = n.documentId
+        ? await api(`/api/news-articles/${n.documentId}${q}`, { method: 'PUT', body: { data: newsPayload(n) } })
+        : await api(`/api/news-articles${q}`, { method: 'POST', body: { data: newsPayload(n) } })
+      notify(publish ? `เผยแพร่ "${n.title_th}" แล้ว` : `บันทึกฉบับร่าง "${n.title_th}" แล้ว`)
+      newsList.value = await loadNews()
+      return res?.data || true
+    } catch (e: any) {
+      notify(e?.data?.error?.message || 'บันทึกข่าวไม่สำเร็จ', 'err')
+      return null
+    }
+  }
+
+  const publishNews = async (n: any) => saveNews(n, true)
+
+  // Hide from the public site but keep the article as a draft. Uses the custom
+  // backend route POST /news-articles/:id/unpublish. If the backend hasn't been
+  // redeployed with that route yet, fall back to: copy as a new draft, then
+  // delete the live one (if the copy fails nothing is touched).
   const unpublishNews = async (n: any) => {
+    if (!isSysadmin.value) return false
     try {
       await api(`/api/news-articles/${n.documentId}/unpublish`, { method: 'POST' })
-      notify('ซ่อนข่าวจากหน้าเว็บแล้ว (ยังเก็บไว้เป็นฉบับร่าง)')
-      await loadAll()
-      return true
     } catch (e: any) {
       const st = e?.statusCode || e?.status
-      notify(st === 404 || st === 405 || st === 403 ? 'ต้องอัปเดตระบบหลังบ้านก่อนจึงจะซ่อนข่าวได้' : 'ซ่อนข่าวไม่สำเร็จ', 'err')
-      return false
+      if (st !== 404 && st !== 405 && st !== 403) { notify('ซ่อนข่าวไม่สำเร็จ', 'err'); return false }
+      let copy: any
+      try {
+        copy = await api('/api/news-articles', { method: 'POST', body: { data: newsPayload(n) } })
+      } catch {
+        notify('ซ่อนข่าวไม่สำเร็จ', 'err')
+        return false
+      }
+      try {
+        await api(`/api/news-articles/${n.documentId}`, { method: 'DELETE' })
+      } catch {
+        if (copy?.data?.documentId) await api(`/api/news-articles/${copy.data.documentId}`, { method: 'DELETE' }).catch(() => {})
+        notify('ซ่อนข่าวไม่สำเร็จ', 'err')
+        return false
+      }
     }
+    notify(`ซ่อน "${n.title_th}" จากหน้าเว็บแล้ว (เก็บเป็นฉบับร่าง)`)
+    newsList.value = await loadNews()
+    return true
   }
 
   const deleteNews = async (n: any) => {
+    if (!isSysadmin.value) return false
     try {
       await api(`/api/news-articles/${n.documentId}`, { method: 'DELETE' })
       newsList.value = newsList.value.filter(x => x.documentId !== n.documentId)
-      notify('ลบข่าวแล้ว')
+      notify(`ลบ "${n.title_th}" แล้ว`)
       return true
     } catch {
       notify('ลบข่าวไม่สำเร็จ', 'err')
       return false
+    }
+  }
+
+  // Upload an image to the Strapi media library. Needs the upload permission
+  // for the user's role (added to the backend bootstrap).
+  const uploadImage = async (file: File): Promise<any | null> => {
+    if (!file.type.startsWith('image/')) { notify('กรุณาเลือกไฟล์รูปภาพ', 'err'); return null }
+    if (file.size > 5 * 1024 * 1024) { notify('รูปใหญ่เกิน 5 MB', 'err'); return null }
+    const fd = new FormData()
+    fd.append('files', file)
+    try {
+      const res: any = await api('/api/upload', { method: 'POST', body: fd })
+      return Array.isArray(res) ? res[0] : res
+    } catch (e: any) {
+      const code = e?.status || e?.response?.status
+      notify(code === 403 || code === 401
+        ? 'บัญชีนี้ยังไม่มีสิทธิ์อัปโหลดรูป ใช้ "ลิงก์รูปภาพ" แทนไปก่อน'
+        : 'อัปโหลดรูปไม่สำเร็จ', 'err')
+      return null
     }
   }
 
@@ -384,7 +417,7 @@ export const useAdminApi = () => {
     notify, imageOf, login, logout, restoreSession, loadAll,
     setJobStatus, deleteJob, setSpam, deleteSpamAll, uploadImage,
     saveProduct, toggleFeatured, deleteProduct,
-    saveNews, unpublishNews, deleteNews, saveSiteSetting, createUser, changeUserRole
+    saveNews, publishNews, unpublishNews, deleteNews, saveSiteSetting, createUser, changeUserRole
   }
 }
 

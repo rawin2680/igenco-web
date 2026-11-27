@@ -1,3 +1,4 @@
+import { newsDateValue } from '~/utils/markdown'
 import { useRuntimeConfig, useState } from '#app'
 import { useAppI18n } from '~/composables/useI18n'
 import type {
@@ -305,8 +306,9 @@ export const useStrapiApi = () => {
     try {
       const res = await $fetch<{ data: any[] }>(`${apiBase}/api/news-articles?populate=*&sort=id:desc`)
       if (!Array.isArray(res?.data) || res.data.length === 0) return null
-      return res.data.map(item => {
-        const uploadedImg = item.image?.url ? `${strapiUrl}${item.image.url}` : null
+      const list = res.data.map(item => {
+        const u = item.image?.url
+        const uploadedImg = u ? (u.startsWith('http') ? u : `${strapiUrl}${u}`) : null
         return {
           id: item.id,
           tag: item.tag || item.category || 'Enterprise Software',
@@ -316,11 +318,21 @@ export const useStrapiApi = () => {
           title: { th: item.title_th, en: item.title_en || item.title_th },
           subtitle: { th: item.subtitle_th || '', en: item.subtitle_en || item.subtitle_th || '' },
           body: { th: item.body_th || '', en: item.body_en || item.body_th || '' },
-          fullContent: { th: item.fullContent_th || item.body_th || '', en: item.fullContent_en || item.body_en || '' },
+          fullContent: { th: item.fullContent_th || '', en: item.fullContent_en || item.fullContent_th || '' },
           image: uploadedImg || item.imageUrl || '/images/news/iso29110.jpg',
-          link: item.externalLink || undefined
+          link: item.externalLink || undefined,
+          _sort: newsDateValue(item.date_en || item.date_th)
         }
       })
+      // Newest news date first; articles without a parseable date go last.
+      list.sort((a, b) => {
+        const va = a._sort, vb = b._sort
+        if (Number.isNaN(va) && Number.isNaN(vb)) return 0
+        if (Number.isNaN(va)) return 1
+        if (Number.isNaN(vb)) return -1
+        return vb - va
+      })
+      return list
     } catch (e) {
       console.warn('Strapi News API fallback to local data:', e)
       return null
