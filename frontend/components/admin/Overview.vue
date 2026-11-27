@@ -8,7 +8,7 @@ const count = (s: string) => jobs.value.filter(j => (j.status || 'new') === s).l
 const featured = computed(() =>
   products.value.filter(p => p.isFeatured).sort((a, b) => (a.featuredOrder || 0) - (b.featuredOrder || 0))
 )
-const prodFilter = useState<'all' | 'featured'>('adm-prod-filter', () => 'all')
+const prodFilter = useState<'all' | 'featured'>('adm-prod-filter', () => 'featured')
 const recentJobs = computed(() => jobs.value.slice(0, 6))
 const thisWeek = computed(() => jobs.value.filter(j => Date.now() - new Date(j.createdAt).getTime() < 7 * 86400e3).length)
 
