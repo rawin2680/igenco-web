@@ -8,6 +8,7 @@ const count = (s: string) => jobs.value.filter(j => (j.status || 'new') === s).l
 const featured = computed(() =>
   products.value.filter(p => p.isFeatured).sort((a, b) => (a.featuredOrder || 0) - (b.featuredOrder || 0))
 )
+const prodFilter = useState<'all' | 'featured'>('adm-prod-filter', () => 'all')
 const recentJobs = computed(() => jobs.value.slice(0, 6))
 const thisWeek = computed(() => jobs.value.filter(j => Date.now() - new Date(j.createdAt).getTime() < 7 * 86400e3).length)
 
@@ -70,7 +71,7 @@ const dot: Record<string, string> = { new: 'bg-amber-500', contacted: 'bg-sky-50
       <section class="bg-white rounded-2xl ring-1 ring-black/[0.06]">
         <header class="flex items-center px-5 py-4 border-b border-black/[0.06]">
           <h3 class="text-sm font-semibold">สไลด์ไฮไลต์หน้าแรก</h3>
-          <button class="ml-auto text-[13px] text-[#00875A] font-medium flex items-center gap-1 hover:underline" @click="emit('go', 'products')">จัดการ <AdminIcon name="arrow" :size="14" /></button>
+          <button class="ml-auto text-[13px] text-[#00875A] font-medium flex items-center gap-1 hover:underline" @click="prodFilter = 'featured'; emit('go', 'products')">จัดการ <AdminIcon name="arrow" :size="14" /></button>
         </header>
         <ol class="p-3 space-y-1">
           <li v-for="(p, i) in featured" :key="p.documentId || p.id" class="flex items-center gap-3 p-2 rounded-xl hover:bg-[#F7F9F8]">

@@ -21,7 +21,7 @@ const inputCls = 'w-full px-3 py-2 rounded-lg bg-white ring-1 ring-black/[0.12] 
 </script>
 
 <template>
-  <form class="space-y-4 max-w-4xl" @submit.prevent="saveSiteSetting">
+  <form class="space-y-4 max-w-4xl" @submit.prevent="saveSiteSetting()">
     <section class="bg-white rounded-2xl ring-1 ring-black/[0.06] p-5">
       <h3 class="text-sm font-semibold mb-4">ข้อมูลบริษัท</h3>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">

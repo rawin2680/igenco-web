@@ -15,10 +15,18 @@
       "type": "string",
       "default": "NEXT-GEN ENTERPRISE AI ARCHITECTURE"
     },
-    "hero_title_th": { "type": "string" },
-    "hero_title_en": { "type": "string" },
-    "hero_subtitle_th": { "type": "text" },
-    "hero_subtitle_en": { "type": "text" },
+    "hero_title_th": {
+      "type": "string"
+    },
+    "hero_title_en": {
+      "type": "string"
+    },
+    "hero_subtitle_th": {
+      "type": "text"
+    },
+    "hero_subtitle_en": {
+      "type": "text"
+    },
     "company_name_th": {
       "type": "string",
       "default": "บริษัท ไอเจนโก้ จำกัด"
@@ -54,6 +62,26 @@
     "officeHours_en": {
       "type": "string",
       "default": "Mon - Fri, 08:30 - 17:30"
+    },
+    "products_eyebrow": {
+      "type": "string",
+      "default": "FEATURED SOLUTIONS • PRODUCT SHOWCASE"
+    },
+    "products_title_th": {
+      "type": "string",
+      "default": "ผลิตภัณฑ์ไฮไลต์ของ IGENCO."
+    },
+    "products_title_en": {
+      "type": "string",
+      "default": "Featured Highlights of IGENCO."
+    },
+    "solutions_title_th": {
+      "type": "string",
+      "default": "ผลิตภัณฑ์และบริการทั้งหมดของ IGENCO"
+    },
+    "solutions_title_en": {
+      "type": "string",
+      "default": "All Products & Services of IGENCO"
     }
   }
 }
