@@ -33,9 +33,27 @@ const submitLogin = async () => {
   }
 }
 
+// Keep jobs fresh: on the overview/jobs tabs, reload when the browser tab
+// regains focus and every 60s, so new contact-form submissions show up
+// without a manual refresh. Edit tabs are skipped so unsaved edits stay.
+let refreshTimer: ReturnType<typeof setInterval> | undefined
+const refreshIfVisible = () => {
+  if (!token.value || isLoading.value || document.visibilityState !== 'visible') return
+  if (tab.value === 'overview' || tab.value === 'jobs') loadAll()
+}
+
 onMounted(async () => {
   await restoreSession()
   booting.value = false
+  document.addEventListener('visibilitychange', refreshIfVisible)
+  window.addEventListener('focus', refreshIfVisible)
+  refreshTimer = setInterval(refreshIfVisible, 60_000)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('visibilitychange', refreshIfVisible)
+  window.removeEventListener('focus', refreshIfVisible)
+  if (refreshTimer) clearInterval(refreshTimer)
 })
 
 // ---------- Navigation ----------
