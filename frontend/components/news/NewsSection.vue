@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useAppI18n } from '~/composables/useI18n'
 import { useAppModal } from '~/composables/useModal'
 import { useStrapiApi } from '~/composables/useStrapiApi'
+import { renderMarkdown } from '~/utils/markdown'
 
 const { locale } = useAppI18n()
 const { openDemo } = useAppModal()
@@ -151,6 +152,16 @@ const filteredArticles = computed(() => {
       item.tag.toLowerCase().includes(searchQuery.value.toLowerCase())
     return matchCategory && matchSearch
   })
+})
+
+// Full content written in /admin (Markdown, rendered safely). Skip it when it
+// just repeats the excerpt.
+const articleContent = computed(() => {
+  const a = selectedArticle.value
+  if (!a?.fullContent) return ''
+  const c = (a.fullContent[locale.value] || a.fullContent.th || '').trim()
+  const b = (a.body[locale.value] || a.body.th || '').trim()
+  return c && c !== b ? c : ''
 })
 
 const openArticle = (article: Article) => {
@@ -563,8 +574,8 @@ onMounted(async () => {
 
         <!-- Full Content -->
         <div class="text-xs sm:text-sm text-forestBlack/80 leading-relaxed space-y-4 max-h-[40vh] overflow-y-auto pr-2">
-          <p>{{ selectedArticle.body[locale] || selectedArticle.body.th }}</p>
-          <p v-if="selectedArticle.fullContent">{{ selectedArticle.fullContent[locale] || selectedArticle.fullContent.th }}</p>
+          <p :class="articleContent && 'font-medium'">{{ selectedArticle.body[locale] || selectedArticle.body.th }}</p>
+          <div v-if="articleContent" class="space-y-3" v-html="renderMarkdown(articleContent)"></div>
         </div>
 
         <!-- Footer -->

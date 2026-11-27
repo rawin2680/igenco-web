@@ -100,6 +100,8 @@ export default {
               'plugin::users-permissions.user.update',
               'plugin::users-permissions.user.me',
               'plugin::users-permissions.role.find',
+              // upload cover/inline images from the custom /admin news editor
+              'plugin::upload.content-api.upload',
             ]
           : [
               'api::news-article.news-article.find',
@@ -113,6 +115,7 @@ export default {
               'api::client-partner.client-partner.find',
               'api::contact-inquiry.contact-inquiry.find',
               'plugin::users-permissions.user.me',
+              'plugin::upload.content-api.upload',
             ];
 
         for (const action of roleActions) {
