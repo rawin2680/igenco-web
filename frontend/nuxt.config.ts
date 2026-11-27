@@ -42,9 +42,11 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'http://localhost:3000',
-      strapiUrl: process.env.NUXT_PUBLIC_STRAPI_URL || 'http://localhost:1337',
-      useMock: process.env.NUXT_PUBLIC_USE_MOCK !== 'false' // default true until Strapi is connected
+      // Defaults point at production so a deploy without env vars still works.
+      // Override with NUXT_PUBLIC_* (e.g. in frontend/.env for local dev).
+      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://igenco-demo2.vercel.app',
+      strapiUrl: process.env.NUXT_PUBLIC_STRAPI_URL || 'https://backend-production-a51c3534.up.railway.app',
+      useMock: process.env.NUXT_PUBLIC_USE_MOCK === 'true' // mock data only when explicitly enabled
     }
   }
 })
