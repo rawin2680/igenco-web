@@ -3,10 +3,37 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAppI18n } from '~/composables/useI18n'
 import { useAppModal } from '~/composables/useModal'
 import { useStrapiApi } from '~/composables/useStrapiApi'
+import ProductIcon from '~/components/products/ProductIcon.vue'
 
 const { locale } = useAppI18n()
 const { openDemo } = useAppModal()
-const { getProductsFromCms } = useStrapiApi()
+const { getProductsFromCms, getSiteSetting, refreshSiteSetting } = useStrapiApi()
+
+// Section headings: editable in /admin (ผลิตภัณฑ์ → สไลด์หน้าแรก), with the
+// original wording as fallback.
+const siteSetting = getSiteSetting()
+const pick = (th?: string, en?: string) => (locale.value === 'th' ? th || en : en || th) || ''
+const showcaseEyebrow = computed(() => siteSetting.value?.products_eyebrow || 'FEATURED SOLUTIONS • PRODUCT SHOWCASE')
+const showcaseTitle = computed(() =>
+  pick(siteSetting.value?.products_title_th, siteSetting.value?.products_title_en) ||
+  (locale.value === 'th' ? 'ผลิตภัณฑ์ไฮไลต์ของ IGENCO.' : 'Featured Highlights of IGENCO.')
+)
+const solutionsTitle = computed(() =>
+  pick(siteSetting.value?.solutions_title_th, siteSetting.value?.solutions_title_en) ||
+  (locale.value === 'th' ? 'ผลิตภัณฑ์และบริการทั้งหมดของ IGENCO' : 'All Products & Services of IGENCO')
+)
+
+// Optional custom button links set in /admin. Empty = default behaviour
+// (details popup / demo request form).
+const openLink = (url?: string) => {
+  if (!url) return false
+  if (url.startsWith('#')) {
+    document.querySelector(url)?.scrollIntoView({ behavior: 'smooth' })
+  } else {
+    window.open(url, '_blank', 'noopener')
+  }
+  return true
+}
 
 // ============================================================================
 // 1. FEATURED HIGHLIGHT CAROUSEL (ผลิตภัณฑ์ไฮไลต์ของ IGENCO)
@@ -22,6 +49,9 @@ export interface FeaturedSlide {
   iconColor: string
   iconType: string
   features: { th: string; en: string }[]
+  tags?: string[]
+  detailUrl?: string
+  demoUrl?: string
 }
 
 const featuredSlides = ref<FeaturedSlide[]>([
@@ -424,7 +454,7 @@ const openModalForSlide = (slide: FeaturedSlide) => {
     subtitle: slide.awardBadge,
     description: slide.description[locale.value] || slide.description.th,
     features: slide.features.map(f => f[locale.value] || f.th),
-    tags: ['ISO 29110', 'Enterprise Solution', 'Sovereign Architecture']
+    tags: slide.tags?.length ? slide.tags : ['ISO 29110', 'Enterprise Solution', 'Sovereign Architecture']
   }
 }
 
@@ -448,6 +478,7 @@ const closeModal = () => {
 
 onMounted(async () => {
   startAutoPlay()
+  refreshSiteSetting()
   const cmsProducts = await getProductsFromCms()
   if (cmsProducts && cmsProducts.length > 0) {
     const iconStyles: Record<string, { iconBg: string; iconColor: string }> = {
@@ -474,7 +505,15 @@ onMounted(async () => {
         'document-pen': { iconBg: 'bg-gradient-to-br from-[#00C978] to-[#059669]', iconColor: 'text-white' },
         'shield': { iconBg: 'bg-gradient-to-br from-[#064E3B] to-[#032B20]', iconColor: 'text-[#00E588]' },
         'pie-chart': { iconBg: 'bg-gradient-to-br from-[#0D9488] to-[#0F766E]', iconColor: 'text-white' },
-        'badge-id': { iconBg: 'bg-gradient-to-br from-[#7C3AED] to-[#5B21B6]', iconColor: 'text-white' }
+        'badge-id': { iconBg: 'bg-gradient-to-br from-[#7C3AED] to-[#5B21B6]', iconColor: 'text-white' },
+        'target': { iconBg: 'bg-gradient-to-br from-[#8B5CF6] to-[#6D28D9]', iconColor: 'text-white' },
+        'graduation': { iconBg: 'bg-gradient-to-br from-[#F59E0B] to-[#D97706]', iconColor: 'text-white' },
+        'building': { iconBg: 'bg-gradient-to-br from-[#16A34A] to-[#137333]', iconColor: 'text-white' },
+        'cash-register': { iconBg: 'bg-gradient-to-br from-[#F43F5E] to-[#E11D48]', iconColor: 'text-white' },
+        'heart': { iconBg: 'bg-gradient-to-br from-[#EC4899] to-[#DB2777]', iconColor: 'text-white' },
+        'document-case': { iconBg: 'bg-gradient-to-br from-[#06B6D4] to-[#0891B2]', iconColor: 'text-white' },
+        'code': { iconBg: 'bg-gradient-to-br from-[#475569] to-[#334155]', iconColor: 'text-white' },
+        'user-tech': { iconBg: 'bg-gradient-to-br from-[#22C55E] to-[#15803D]', iconColor: 'text-white' }
       }
       const totalStr = String(featured.length).padStart(2, '0')
       featuredSlides.value = featured.map((p: any, i: number) => {
@@ -501,7 +540,10 @@ onMounted(async () => {
           features: featuresTh.map((ft: string, idx: number) => ({
             th: ft,
             en: featuresEn[idx] || ft
-          }))
+          })),
+          tags: Array.isArray(p.tags) ? p.tags : [],
+          detailUrl: p.detailUrl || '',
+          demoUrl: p.demoUrl || ''
         }
       })
       if (currentSlideIndex.value >= featuredSlides.value.length) {
@@ -549,11 +591,11 @@ onUnmounted(() => {
           <div>
             <!-- Eyebrow -->
             <div class="text-[11px] font-mono font-semibold tracking-[0.2em] uppercase text-[#059669] mb-1.5">
-              FEATURED SOLUTIONS • PRODUCT SHOWCASE
+              {{ showcaseEyebrow }}
             </div>
             <!-- Headline with dot -->
             <h2 class="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-forestBlack">
-              {{ locale === 'th' ? 'ผลิตภัณฑ์ไฮไลต์ของ IGENCO.' : 'Featured Highlights of IGENCO.' }}
+              {{ showcaseTitle }}
             </h2>
           </div>
 
@@ -622,25 +664,7 @@ onUnmounted(() => {
                 class="w-5 h-5 rounded-md flex items-center justify-center shrink-0"
                 :class="[shortcut.iconBg, shortcut.iconColor]"
               >
-                <!-- Mini SVGs -->
-                <svg v-if="shortcut.iconType === 'users'" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                  <circle cx="9" cy="7" r="4"/>
-                </svg>
-                <svg v-else-if="shortcut.iconType === 'document-pen'" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M12 20h9"/>
-                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
-                </svg>
-                <svg v-else-if="shortcut.iconType === 'shield'" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                </svg>
-                <svg v-else-if="shortcut.iconType === 'pie-chart'" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M21.21 15.89A10 10 0 1 1 8 2.83"/>
-                  <path d="M22 12A10 10 0 0 0 12 2v10z"/>
-                </svg>
-                <svg v-else class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="3" y="4" width="18" height="16" rx="2"/>
-                </svg>
+                <ProductIcon :type="shortcut.iconType" class="w-3 h-3" />
               </div>
 
               <span>{{ shortcut.label }}</span>
@@ -670,25 +694,7 @@ onUnmounted(() => {
                     class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center shrink-0 shadow-xs"
                     :class="[featuredSlides[currentSlideIndex].iconBg, featuredSlides[currentSlideIndex].iconColor]"
                   >
-                    <!-- Icon SVGs -->
-                    <svg v-if="featuredSlides[currentSlideIndex].iconType === 'users'" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                      <circle cx="9" cy="7" r="4"/>
-                    </svg>
-                    <svg v-else-if="featuredSlides[currentSlideIndex].iconType === 'document-pen'" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M12 20h9"/>
-                      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
-                    </svg>
-                    <svg v-else-if="featuredSlides[currentSlideIndex].iconType === 'shield'" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                    </svg>
-                    <svg v-else-if="featuredSlides[currentSlideIndex].iconType === 'pie-chart'" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M21.21 15.89A10 10 0 1 1 8 2.83"/>
-                      <path d="M22 12A10 10 0 0 0 12 2v10z"/>
-                    </svg>
-                    <svg v-else class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <rect x="3" y="4" width="18" height="16" rx="2"/>
-                    </svg>
+                    <ProductIcon :type="featuredSlides[currentSlideIndex].iconType" class="w-4 h-4" />
                   </div>
 
                   <!-- Number Flagship Badge -->
@@ -717,14 +723,14 @@ onUnmounted(() => {
               <div class="flex items-center gap-2.5 pt-2">
                 <button
                   type="button"
-                  @click="openModalForSlide(featuredSlides[currentSlideIndex])"
+                  @click="openLink(featuredSlides[currentSlideIndex].detailUrl) || openModalForSlide(featuredSlides[currentSlideIndex])"
                   class="px-4 py-2 rounded-full text-xs font-semibold bg-white hover:bg-forestBlack/5 text-forestBlack border border-forestBlack/15 transition-all shadow-2xs cursor-pointer active:scale-95 whitespace-nowrap"
                 >
                   {{ locale === 'th' ? 'ดูรายละเอียด' : 'View Details' }}
                 </button>
                 <button
                   type="button"
-                  @click="openDemo"
+                  @click="openLink(featuredSlides[currentSlideIndex].demoUrl) || openDemo()"
                   class="px-5 py-2 rounded-full text-xs font-bold bg-[#00C978] hover:bg-[#00B36B] text-forestBlack transition-all shadow-xs hover:shadow-md cursor-pointer flex items-center gap-1.5 active:scale-95 whitespace-nowrap"
                 >
                   <span>{{ locale === 'th' ? 'ขอทดสอบระบบ' : 'Request Demo' }}</span>
@@ -778,10 +784,10 @@ onUnmounted(() => {
         <!-- Header Bar Matching Image 2 -->
         <div class="flex items-center justify-between mb-6 pb-2.5 border-b border-forestBlack/[0.08]">
           <h2 class="text-xl sm:text-2xl lg:text-3xl font-bold text-forestBlack">
-            {{ locale === 'th' ? 'ผลิตภัณฑ์และบริการทั้งหมดของ IGENCO' : 'All Products & Services of IGENCO' }}
+            {{ solutionsTitle }}
           </h2>
           <div class="text-xs font-mono text-mutedSlate font-semibold">
-            12 Solutions
+            {{ solutionsList.length }} Solutions
           </div>
         </div>
 
@@ -801,96 +807,7 @@ onUnmounted(() => {
                 class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shadow-2xs transition-transform duration-200 group-hover:scale-105"
                 :class="[item.iconBg, item.iconColor]"
               >
-                <!-- 1. Document Pen (i-SMARTFLOW) -->
-                <svg v-if="item.iconType === 'document-pen'" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M12 20h9"/>
-                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
-                </svg>
-
-                <!-- 2. Users (HR.ai) -->
-                <svg v-else-if="item.iconType === 'users'" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                  <circle cx="9" cy="7" r="4"/>
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                </svg>
-
-                <!-- 3. Pie Chart (i-FINSOFT) -->
-                <svg v-else-if="item.iconType === 'pie-chart'" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M21.21 15.89A10 10 0 1 1 8 2.83"/>
-                  <path d="M22 12A10 10 0 0 0 12 2v10z"/>
-                </svg>
-
-                <!-- 4. Target / BSC (iGenco BSC) -->
-                <svg v-else-if="item.iconType === 'target'" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="10"/>
-                  <circle cx="12" cy="12" r="6"/>
-                  <circle cx="12" cy="12" r="2"/>
-                </svg>
-
-                <!-- 5. Badge ID (i-Regist) -->
-                <svg v-else-if="item.iconType === 'badge-id'" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="4" width="18" height="16" rx="2"/>
-                  <circle cx="12" cy="10" r="3"/>
-                  <path d="M7 17a5 5 0 0 1 10 0"/>
-                </svg>
-
-                <!-- 6. Graduation Cap (i-EDUCATION) -->
-                <svg v-else-if="item.iconType === 'graduation'" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
-                  <path d="M6 12v5c3 3 9 3 12 0v-5"/>
-                </svg>
-
-                <!-- 7. Building (i-Real Estate) -->
-                <svg v-else-if="item.iconType === 'building'" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="4" y="2" width="16" height="20" rx="2"/>
-                  <line x1="8" y1="6" x2="8" y2="6.01"/>
-                  <line x1="12" y1="6" x2="12" y2="6.01"/>
-                  <line x1="16" y1="6" x2="16" y2="6.01"/>
-                  <line x1="8" y1="10" x2="8" y2="10.01"/>
-                  <line x1="12" y1="10" x2="12" y2="10.01"/>
-                  <line x1="16" y1="10" x2="16" y2="10.01"/>
-                  <line x1="8" y1="14" x2="8" y2="14.01"/>
-                  <line x1="12" y1="14" x2="12" y2="14.01"/>
-                  <line x1="16" y1="14" x2="16" y2="14.01"/>
-                  <path d="M10 22v-4h4v4"/>
-                </svg>
-
-                <!-- 8. Cash Register / POS (iPOS) -->
-                <svg v-else-if="item.iconType === 'cash-register'" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="11" width="18" height="10" rx="2"/>
-                  <path d="M7 11V7a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v4"/>
-                  <line x1="7" y1="15" x2="7.01" y2="15"/>
-                  <line x1="11" y1="15" x2="11.01" y2="15"/>
-                  <line x1="15" y1="15" x2="15.01" y2="15"/>
-                  <line x1="7" y1="18" x2="7.01" y2="18"/>
-                  <line x1="11" y1="18" x2="11.01" y2="18"/>
-                  <line x1="15" y1="18" x2="15.01" y2="18"/>
-                </svg>
-
-                <!-- 9. Heart (iMme Application) -->
-                <svg v-else-if="item.iconType === 'heart'" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                </svg>
-
-                <!-- 10. Document Case (i-SMARTSOFT) -->
-                <svg v-else-if="item.iconType === 'document-case'" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="3" width="7" height="9"/>
-                  <rect x="14" y="3" width="7" height="5"/>
-                  <rect x="14" y="12" width="7" height="9"/>
-                  <rect x="3" y="16" width="7" height="5"/>
-                </svg>
-
-                <!-- 11. Code Brackets (Software OnDemand) -->
-                <svg v-else-if="item.iconType === 'code'" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="16 18 22 12 16 6"/>
-                  <polyline points="8 6 2 12 8 18"/>
-                </svg>
-
-                <!-- 12. IT Professional (OutSource Service) -->
-                <svg v-else class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                  <circle cx="12" cy="7" r="4"/>
-                </svg>
+                <ProductIcon :type="item.iconType" class="w-5 h-5" />
               </div>
 
               <!-- Right Pill Tag -->

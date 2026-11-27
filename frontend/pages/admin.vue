@@ -75,7 +75,7 @@ const nav = computed(() => [
 const pageMeta: Record<Tab, { title: string; desc: string; searchable?: boolean }> = {
   overview: { title: 'ภาพรวม', desc: 'สรุปงานและผลิตภัณฑ์ทั้งหมด' },
   jobs: { title: 'งาน', desc: 'คำขอใบเสนอราคาและนัด Demo จากหน้าเว็บ', searchable: true },
-  products: { title: 'ผลิตภัณฑ์', desc: 'ผลิตภัณฑ์และบริการที่แสดงบนเว็บไซต์', searchable: true },
+  products: { title: 'ผลิตภัณฑ์', desc: 'ผลิตภัณฑ์และบริการบนเว็บไซต์ รวมสไลด์ไฮไลต์หน้าแรก', searchable: true },
   news: { title: 'ข่าวสาร', desc: 'ข่าวและกิจกรรมบนหน้าเว็บ', searchable: true },
   settings: { title: 'ข้อมูลบริษัท', desc: 'ที่อยู่ เบอร์โทร และข้อความหน้าแรก' },
   users: { title: 'ทีมงาน', desc: 'บัญชีผู้ใช้และสิทธิ์การเข้าถึง' }

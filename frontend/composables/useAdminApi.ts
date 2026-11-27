@@ -180,6 +180,12 @@ export const useAdminApi = () => {
   }
 
   // ---------------- Products ----------------
+  // Fields added later (button links, section headings) only exist after the
+  // backend is redeployed. Strapi rejects unknown keys, so only send them when
+  // the loaded data shows the backend knows them.
+  const productHas = (key: string) => products.value.some(x => key in x)
+  const siteHas = (key: string) => key in (siteSetting.value || {})
+
   const productPayload = (p: any) => ({
     title: p.title,
     subtitle_th: p.subtitle_th || null,
@@ -194,7 +200,9 @@ export const useAdminApi = () => {
     featuredOrder: Number(p.featuredOrder) || 0,
     awardBadge: p.awardBadge || null,
     imageUrl: p.imageUrl || null,
-    iconType: p.iconType || 'document-pen'
+    iconType: p.iconType || 'document-pen',
+    image: p.image?.id ?? null,
+    ...(productHas('demoUrl') ? { detailUrl: p.detailUrl?.trim() || null, demoUrl: p.demoUrl?.trim() || null } : {})
   })
 
   // status=published so the change shows on the live site straight away
@@ -226,6 +234,21 @@ export const useAdminApi = () => {
     } catch {
       p.isFeatured = !next
       notify('อัปเดตไม่สำเร็จ', 'err')
+    }
+  }
+
+  // Save the homepage slide order (1, 2, 3 …) for the given list.
+  const reorderFeatured = async (list: any[]) => {
+    if (!isSysadmin.value) return
+    list.forEach((p, i) => (p.featuredOrder = i + 1))
+    try {
+      await Promise.all(list.map(p =>
+        api(`/api/products/${p.documentId}?status=published`, { method: 'PUT', body: { data: { featuredOrder: p.featuredOrder } } })
+      ))
+      notify('บันทึกลำดับสไลด์แล้ว')
+    } catch {
+      notify('บันทึกลำดับไม่สำเร็จ', 'err')
+      await loadAll()
     }
   }
 
@@ -369,16 +392,17 @@ export const useAdminApi = () => {
   }
 
   // ---------------- Site setting ----------------
-  const saveSiteSetting = async () => {
+  const saveSiteSetting = async (okMsg = 'บันทึกข้อมูลบริษัทแล้ว') => {
     const s = siteSetting.value
     const keys = ['hero_badge', 'hero_title_th', 'hero_title_en', 'hero_subtitle_th', 'hero_subtitle_en',
       'company_name_th', 'company_name_en', 'address_th', 'address_en', 'phone', 'email',
-      'officeHours_th', 'officeHours_en']
+      'officeHours_th', 'officeHours_en',
+      'products_eyebrow', 'products_title_th', 'products_title_en', 'solutions_title_th', 'solutions_title_en']
     const data: any = {}
-    keys.forEach(k => (data[k] = s[k]))
+    keys.forEach(k => { if (k in s) data[k] = s[k] })
     try {
       await api('/api/site-setting?status=published', { method: 'PUT', body: { data } })
-      notify('บันทึกข้อมูลบริษัทแล้ว')
+      notify(okMsg)
     } catch {
       notify('บันทึกไม่สำเร็จ', 'err')
     }
@@ -416,7 +440,7 @@ export const useAdminApi = () => {
     jobs, spamJobs, products, newsList, siteSetting, usersList, rolesList,
     notify, imageOf, login, logout, restoreSession, loadAll,
     setJobStatus, deleteJob, setSpam, deleteSpamAll, uploadImage,
-    saveProduct, toggleFeatured, deleteProduct,
+    saveProduct, toggleFeatured, reorderFeatured, deleteProduct, productHas, siteHas,
     saveNews, publishNews, unpublishNews, deleteNews, saveSiteSetting, createUser, changeUserRole
   }
 }
