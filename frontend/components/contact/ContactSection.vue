@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useAppI18n } from '~/composables/useI18n'
 import { useStrapiApi } from '~/composables/useStrapiApi'
 
@@ -43,6 +43,11 @@ const isSubmitting = ref(false)
 const isSubmitted = ref(false)
 const submitError = ref('')
 
+// Anti-spam: hidden honeypot field + time the form was opened
+const honeypot = ref('')
+const startedAt = ref(Date.now())
+onMounted(() => { startedAt.value = Date.now() })
+
 const handleSubmitInquiry = async () => {
   isSubmitting.value = true
   submitError.value = ''
@@ -54,7 +59,7 @@ const handleSubmitInquiry = async () => {
     subject: form.value.subject,
     interestedProduct: form.value.interestedProduct,
     details: form.value.details
-  })
+  }, { startedAt: startedAt.value, honeypot: honeypot.value })
   isSubmitting.value = false
   if (res.success) {
     isSubmitted.value = true
@@ -65,6 +70,8 @@ const handleSubmitInquiry = async () => {
 
 const resetForm = () => {
   isSubmitted.value = false
+  honeypot.value = ''
+  startedAt.value = Date.now()
   form.value = {
     contactName: '',
     organization: '',
@@ -351,6 +358,10 @@ const resetForm = () => {
 
             <!-- Form -->
             <form v-if="!isSubmitted" @submit.prevent="handleSubmitInquiry" class="space-y-4">
+              <!-- Honeypot (hidden from people, bots fill it) -->
+              <div aria-hidden="true" style="position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden">
+                <label>Website <input v-model="honeypot" type="text" name="website" tabindex="-1" autocomplete="off" /></label>
+              </div>
               
               <!-- Row 1: Name & Organization -->
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -360,6 +371,7 @@ const resetForm = () => {
                   </label>
                   <input
                     v-model="form.contactName"
+                    maxlength="100"
                     required
                     type="text"
                     :placeholder="locale === 'th' ? 'ระบุชื่อ-นามสกุล' : 'Full Name'"
@@ -373,6 +385,7 @@ const resetForm = () => {
                   </label>
                   <input
                     v-model="form.organization"
+                    maxlength="150"
                     required
                     type="text"
                     :placeholder="locale === 'th' ? 'ระบุชื่อหน่วยงานหรือบริษัท' : 'Company Name'"
@@ -389,6 +402,7 @@ const resetForm = () => {
                   </label>
                   <input
                     v-model="form.phone"
+                    maxlength="30"
                     required
                     type="tel"
                     placeholder="02-XXX-XXXX / 08X-XXX-XXXX"
@@ -402,6 +416,7 @@ const resetForm = () => {
                   </label>
                   <input
                     v-model="form.email"
+                    maxlength="254"
                     required
                     type="email"
                     placeholder="name@organization.co.th"
@@ -466,12 +481,17 @@ const resetForm = () => {
                 </label>
                 <textarea
                   v-model="form.details"
+                    maxlength="3000"
                   required
                   rows="4"
                   :placeholder="locale === 'th' ? 'ระบุรายละเอียดความต้องการ จำนวนผู้ใช้งาน หรือช่วงเวลาที่สะดวกให้เจ้าหน้าที่ติดต่อกลับ...' : 'Please specify requirements, user count, or preferred contact time...'"
                   class="w-full bg-[#F8FAF9] text-xs sm:text-sm text-forestBlack placeholder-mutedSlate p-3.5 rounded-xl border border-forestBlack/10 focus:outline-none focus:border-[#00C978] resize-none"
                 ></textarea>
               </div>
+
+              <p v-if="submitError" role="alert" class="text-xs sm:text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-3.5 py-2.5">
+                {{ submitError }}
+              </p>
 
               <!-- Bottom Action & PDPA Note -->
               <div class="pt-3 flex flex-col sm:flex-row items-center justify-between gap-4">
